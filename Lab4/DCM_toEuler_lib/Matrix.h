@@ -16,7 +16,8 @@ int MATRIX_SetValue(Matrix m, int row, int col, float value);
 void MATRIX_Print(Matrix m);
 
 Matrix MATRIX_Multiply(Matrix m1, Matrix m2);
-
+Matrix MATRIX_Subtract(Matrix m1, Matrix m2);
+Matrix MATRIX_MultiplyScalar(Matrix m1, float s);
 
 Matrix MATRIX_ConstructEulerMatrix(float* angles);
 Matrix MATRIX_ConstructCPMatrix(float* angles);

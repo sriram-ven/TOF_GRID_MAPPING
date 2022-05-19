@@ -51,10 +51,34 @@ void MATRIX_Print(Matrix m) {
     printf("\n");
 }
 
+Matrix MATRIX_Subtract(Matrix m1, Matrix m2) {
+    Matrix m = MATRIX_Init(m1->rowSize, m2->colSize);
+    uint8_t i, j;
+    float val = 0;
+    for (i = 0; i < m1->rowSize; i++) {
+        for (j = 0; j < m2->colSize; j++) {
+            val = MATRIX_GetValue(m1, i, j) - MATRIX_GetValue(m2, i, j);
+            MATRIX_SetValue(m, i, j, val);
+        }
+    }
+    return m;
+}
+
+Matrix MATRIX_MultiplyScalar(Matrix m1, float s){
+    uint8_t i, j;
+    for (i = 0; i < m1->rowSize; i++) {
+        for (j = 0; j < m1->colSize; j++) {
+            MATRIX_SetValue(m1, i, j, s*MATRIX_GetValue(m1, i, j));
+        }
+    }
+    return m1;
+}
+
+
 Matrix MATRIX_Multiply(Matrix m1, Matrix m2) {
     Matrix m = MATRIX_Init(m1->rowSize, m2->colSize);
-    static uint8_t i, j, k;
-    static float val;
+    uint8_t i, j, k;
+    float val;
 
     for (i = 0; i < m1->rowSize; i++) {
         for (j = 0; j < m2->colSize; j++) {
