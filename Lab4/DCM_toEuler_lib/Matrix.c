@@ -21,6 +21,20 @@ Matrix MATRIX_Init(int rows, int columns){
     return m;
 }
 
+Matrix MATRIX_Copy(Matrix m){
+    if(m == NULL){
+        printf("\r\rMATRIX_Copy Error: Input matrix is NULL\n");
+        return 0;
+    }
+    Matrix new = MATRIX_Init(m->rows, m->columns);
+    for(int i = 0; i < m->rows; i++){
+        for(int j = 0; j < m->columns; j++){
+            MATRIX_SetValue(new, i, j, MATRIX_GetValue(m, i, j));
+        }
+    }
+    return new;
+}
+
 void MATRIX_Free(Matrix m){
     free(m->arr);
     free(m);

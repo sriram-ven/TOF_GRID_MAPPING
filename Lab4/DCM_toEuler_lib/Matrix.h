@@ -11,6 +11,7 @@ typedef struct MatrixObj{
 typedef MatrixObj* Matrix;
 
 Matrix MATRIX_Init(int rowSize, int colSize);
+Matrix MATRIX_Copy(Matrix m);
 void MATRIX_Free(Matrix m);
 void MATRIX_Print(Matrix m);
 
