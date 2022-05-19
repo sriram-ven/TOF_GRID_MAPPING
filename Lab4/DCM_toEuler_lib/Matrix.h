@@ -22,6 +22,7 @@ Matrix MATRIX_GetColumnVector(Matrix m, int col);
 Matrix MATRIX_Multiply(Matrix m, Matrix n);
 Matrix MATRIX_Subtract(Matrix m, Matrix n);
 Matrix MATRIX_MultiplyScalar(Matrix m, float s);
+Matrix MATRIX_Transpose(Matrix m);
 
 Matrix MATRIX_ConstructEulerMatrix(float* angles);
 float* MATRIX_GetEulerAngles(Matrix m);

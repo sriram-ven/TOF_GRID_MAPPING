@@ -146,6 +146,20 @@ Matrix MATRIX_MultiplyScalar(Matrix m, float s){
     return m;
 }
 
+Matrix MATRIX_Transpose(Matrix m){
+    if(m == NULL){
+        printf("\rMATRIX_Transpose Error: Input matrix is NULL");
+        return NULL;
+    }
+    Matrix result = MATRIX_Init(m->columns, m->rows);
+    for(uint8_t i = 0; i < m->rows; i++){
+        for(uint8_t j = 0; j < m->columns; j++){
+            MATRIX_SetValue(result, j, i, MATRIX_GetValue(m, i, j));
+        }
+    }
+    return result;
+}
+
 void MATRIX_Print(Matrix m){
     if(m == NULL){
         printf("\rMATRIX_Print Error: Input matrix is NULL\n");
