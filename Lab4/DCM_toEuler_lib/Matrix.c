@@ -160,6 +160,21 @@ Matrix MATRIX_Transpose(Matrix m){
     return result;
 }
 
+Matrix MATRIX_Exponential(Matrix m){
+    if(m == NULL){
+        printf("\rMATRIX_Transpose Error: Input matrix is NULL");
+        return NULL;
+    }
+    Matrix result = MATRIX_Init(m->rows, m->columns);
+    for(uint8_t i = 0; i < m->rows; i++){
+        for(uint8_t j = 0; j < m->columns; j++){
+            float value = MATRIX_GetValue(m, i, j);
+            MATRIX_SetValue(result, i, j, exp(value));
+        }
+    }
+    return result;
+}
+
 void MATRIX_Print(Matrix m){
     if(m == NULL){
         printf("\rMATRIX_Print Error: Input matrix is NULL\n");
