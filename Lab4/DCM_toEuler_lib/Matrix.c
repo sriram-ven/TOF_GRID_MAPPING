@@ -3,7 +3,7 @@
 #include "xc.h"
 #include <math.h>
 
-#include "matrix.h"
+#include "Matrix.h"
 
 Matrix MATRIX_Init(int rows, int columns){
     if((rows < 0) || (columns < 0)){
