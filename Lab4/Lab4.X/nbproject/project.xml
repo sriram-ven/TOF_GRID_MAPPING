@@ -4,7 +4,7 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>Lab4</name>
-            <creation-uuid>0426640b-7c74-4641-b47e-64ae62ce7c0b</creation-uuid>
+            <creation-uuid>fd6b2bde-ff2e-4616-b91e-7c06c6fecb63</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
@@ -13,6 +13,7 @@
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
+                <sourceRootElem>../../Common</sourceRootElem>
                 <sourceRootElem>../DCM_toEuler_lib</sourceRootElem>
             </sourceRootList>
             <confList>
