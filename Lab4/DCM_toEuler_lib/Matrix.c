@@ -5,7 +5,7 @@
 
 #include "Matrix.h"
 
-#define VALID_NORM 0.01
+#define VALID_NORM 0.1
 
 Matrix MATRIX_Init(int rows, int columns) {
     if ((rows < 0) || (columns < 0)) {

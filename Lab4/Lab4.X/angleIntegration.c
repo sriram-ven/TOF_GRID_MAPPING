@@ -30,7 +30,7 @@ int gyroBiases[3];
 float scaleFactors[3] = {1.067, 1.036, 1.036}; //(x,y,z))
 float GyroReadings[3] = {0, 0, 0};
 
-Matrix DCM;
+Matrix gyroDCM;
 
 int main(void) {
     BOARD_Init();
@@ -38,7 +38,7 @@ int main(void) {
     TIMERS_Init();
     BNO055_Init();
     
-    DCM = MATRIX_ConstructEulerMatrix(GyroReadings);
+    gyroDCM = MATRIX_ConstructEulerMatrix(GyroReadings);
     
     printf("\rLab 4: Gyro Angle Integration\n");
     
@@ -52,7 +52,7 @@ int main(void) {
             UpdateGyroReadings();
 //            UpdateDCM_forwardIntegration();
             UpdateDCM_MatrixExponential();
-            float* angles = MATRIX_GetEulerAngles(DCM);
+            float* angles = MATRIX_GetEulerAngles(gyroDCM);
             printf("\rangles: - X: %f, Y: %f, Z: %f\n", angles[0], angles[1], angles[2]);
             free(angles);
             
@@ -100,16 +100,16 @@ void UpdateGyroReadings(){
 
 void UpdateDCM_forwardIntegration(){
     Matrix pqrMatrix = MATRIX_ConstructCPMatrix(GyroReadings);
-    Matrix m1 = MATRIX_Copy(DCM);
+    Matrix m1 = MATRIX_Copy(gyroDCM);
     MATRIX_MultiplyScalar(m1,(SAMPLE_TIME/1000.0));
     Matrix m2 = MATRIX_Multiply(pqrMatrix, m1);
-    Matrix newDCM = MATRIX_Subtract(DCM, m2);
+    Matrix newDCM = MATRIX_Subtract(gyroDCM, m2);
     
-    MATRIX_Free(DCM);
+    MATRIX_Free(gyroDCM);
     MATRIX_Free(m1);
     MATRIX_Free(m2);
     MATRIX_Free(pqrMatrix);
-    DCM = newDCM;
+    gyroDCM = newDCM;
 }
 
 void UpdateDCM_MatrixExponential(){
@@ -121,10 +121,10 @@ void UpdateDCM_MatrixExponential(){
     float r = GyroReadings[2];
     
     Matrix exp = MATRIX_Exponential(pqrMatrix, p, q, r, deltaT);
-    Matrix newDCM = MATRIX_Multiply(exp, DCM);
+    Matrix newDCM = MATRIX_Multiply(exp, gyroDCM);
     
     MATRIX_Free(pqrMatrix);
     MATRIX_Free(exp);
-    MATRIX_Free(DCM);
-    DCM = newDCM;
+    MATRIX_Free(gyroDCM);
+    gyroDCM = newDCM;
 }
