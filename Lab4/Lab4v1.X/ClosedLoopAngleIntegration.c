@@ -50,12 +50,16 @@ int main(void) {
     TIMERS_Init();
     BNO055_Init();
     OledInit();
-
+    OledOn();
+    
     printf("\rLab 4: Closed Loop Gyro Angle Integration\n");
+    sprintf(OledBuffer, "Calibrating...\n\0");
+    OledDrawString(OledBuffer);
+    OledUpdate();
     InitGyroCalibration();
     InitAccelCalibration();
-    OledOn();
-
+    
+    OledClear(0);
     int prevTime = 0;
     while (1) {
         int curTime = TIMERS_GetMilliSeconds();
@@ -71,7 +75,7 @@ int main(void) {
             OledDrawString(OledBuffer);
             OledUpdate();
             
-//            printf("\rangles: - X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
+            printf("\rangles: - X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
             free(angles);
             
             prevTime = curTime;
