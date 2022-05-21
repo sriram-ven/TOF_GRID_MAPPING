@@ -26,12 +26,10 @@ void Delay(int time); // delay function that utilizes timer library (blocking)
 
 void InitGyroCalibration(); // initializes the readings and bias vectors
 void CalculateGyroBiases(); // calculates bias and stores them in module level variables
-void UpdateGyroReadings(); // integrates current sample and adds it to total angle
-void UpdateDCM_forwardIntegration();
-void UpdateDCM_MatrixExponential();
-void IntegrateClosedLoop();
+void UpdateGyroReadings(); // initializes gyro matrices and calculates initial biases
+void IntegrateClosedLoop(); // closed loop integration with accelerometer feedback
 
-void InitAccelCalibration();
+void InitAccelCalibration(); // initializes accelerometer matrices
 void UpdateAccelReadings(); // calculates the new accelerometer readings with calibration
 
 Matrix gyroBiases = NULL; // stores the bias of each gyro axis
@@ -58,12 +56,13 @@ int main(void) {
         int curTime = TIMERS_GetMilliSeconds();
         if (abs(curTime - prevTime) > SAMPLE_TIME) {
             UpdateAccelReadings();
-            //            UpdateGyroReadings();
+            UpdateGyroReadings();
 
-            //            IntegrateClosedLoop();
-            //            float* angles = MATRIX_GetEulerAngles(gyroDCM);
-            //            printf("\rangles: - X: %f, Y: %f, Z: %f\n", angles[0], angles[1], angles[2]);
-            //            free(angles);
+            IntegrateClosedLoop();
+            float* angles = MATRIX_GetEulerAngles(gyroDCM);
+            printf("\rangles: - X: %f, Y: %f, Z: %f\n", angles[0], angles[1], angles[2]);
+            free(angles);
+            
             prevTime = curTime;
         }
     }
@@ -123,7 +122,7 @@ void InitAccelCalibration() {
 
     // inertial acceleration vector
     accelInertial = MATRIX_Init(3, 1);
-    MATRIX_SetValue(accelInertial, 2, 0, 1.0);
+    MATRIX_SetValue(accelInertial, 2, 0, -1.0);
 }
 
 void Delay(int time) {
@@ -149,12 +148,6 @@ void UpdateAccelReadings() {
     float rawY = (BNO055_ReadAccelY() / ACCEL_UNIT_SCALING);
     float rawZ = (BNO055_ReadAccelZ() / ACCEL_UNIT_SCALING);
 
-    // normalize the readings
-    float norm = sqrt(pow(rawX, 2) + pow(rawY, 2) + pow(rawZ, 2));
-    rawX /= norm;
-    rawY /= norm;
-    rawZ /= norm;
-
     // store the readings in the accelReadings vector
     MATRIX_SetValue(accelReadings, 0, 0, rawX);
     MATRIX_SetValue(accelReadings, 1, 0, rawY);
@@ -164,6 +157,13 @@ void UpdateAccelReadings() {
     Matrix v1 = MATRIX_Multiply(accelAMatrix, accelReadings);
     Matrix v2 = MATRIX_Add(v1, accelBMatrix);
     
+    // normalize the readings
+    float rX = MATRIX_GetValue(v2, 0, 0);
+    float rY = MATRIX_GetValue(v2, 1, 0);
+    float rZ = MATRIX_GetValue(v2, 2, 0);
+    float norm = 1 / sqrt(pow(rX, 2) + pow(rY, 2) + pow(rZ, 2));
+    
+    MATRIX_MultiplyScalar(v2, 1 / norm);
     MATRIX_Set(accelReadings, v2);
 
     MATRIX_Free(v1);
@@ -171,45 +171,8 @@ void UpdateAccelReadings() {
     return;
 }
 
-void UpdateDCM_forwardIntegration() {
-    float pqrVec[3];
-    pqrVec[0] = MATRIX_GetValue(gyroReadings, 0, 0);
-    pqrVec[1] = MATRIX_GetValue(gyroReadings, 1, 0);
-    pqrVec[2] = MATRIX_GetValue(gyroReadings, 2, 0);
-
-    Matrix pqrMatrix = MATRIX_ConstructCPMatrix(pqrVec);
-    Matrix m1 = MATRIX_Copy(gyroDCM);
-    MATRIX_MultiplyScalar(m1, (SAMPLE_TIME / 1000.0));
-    Matrix m2 = MATRIX_Multiply(pqrMatrix, m1);
-    Matrix newDCM = MATRIX_Subtract(gyroDCM, m2);
-
-    MATRIX_Free(gyroDCM);
-    MATRIX_Free(m1);
-    MATRIX_Free(m2);
-    MATRIX_Free(pqrMatrix);
-    gyroDCM = newDCM;
-}
-
-void UpdateDCM_MatrixExponential() {
-    float pqrVec[3];
-    pqrVec[0] = MATRIX_GetValue(gyroReadings, 0, 0);
-    pqrVec[1] = MATRIX_GetValue(gyroReadings, 1, 0);
-    pqrVec[2] = MATRIX_GetValue(gyroReadings, 2, 0);
-    Matrix pqrMatrix = MATRIX_ConstructCPMatrix(pqrVec);
-
-    float deltaT = -1 * SAMPLE_TIME / 1000.0;
-
-    Matrix exp = MATRIX_Exponential(pqrMatrix, pqrVec[0], pqrVec[1], pqrVec[2], deltaT);
-    Matrix newDCM = MATRIX_Multiply(exp, gyroDCM);
-
-    MATRIX_Free(pqrMatrix);
-    MATRIX_Free(exp);
-    MATRIX_Free(gyroDCM);
-    gyroDCM = newDCM;
-}
-
 void IntegrateClosedLoop() {
-    float kp_a = 10;
+    float kp_a = 5;
     float ki_a = kp_a / 10;
 
     float accels[3];
