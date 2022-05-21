@@ -10,6 +10,9 @@
       <itemPath>../../Common/Matrix.h</itemPath>
       <itemPath>../../Common/serial.h</itemPath>
       <itemPath>../../Common/timers.h</itemPath>
+      <itemPath>../../Common/Oled.h</itemPath>
+      <itemPath>../../Common/Ascii.h</itemPath>
+      <itemPath>../../Common/OledDriver.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -26,6 +29,9 @@
       <itemPath>../../Common/timers.c</itemPath>
       <itemPath>OpenLoopAngleIntegration.c</itemPath>
       <itemPath>ClosedLoopAngleIntegration.c</itemPath>
+      <itemPath>../../Common/Oled.c</itemPath>
+      <itemPath>../../Common/Ascii.c</itemPath>
+      <itemPath>../../Common/OledDriver.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

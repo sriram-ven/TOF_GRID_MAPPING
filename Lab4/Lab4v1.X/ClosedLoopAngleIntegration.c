@@ -11,6 +11,7 @@
 #include "serial.h"
 #include "timers.h"
 #include "BNO055.h"
+#include "Oled.h"
 #include "Matrix.h"
 #include "math.h"
 
@@ -41,15 +42,19 @@ Matrix accelAMatrix = NULL; // stores the calibration scale matrix
 Matrix accelBMatrix = NULL; // stores the calibration bias vector
 Matrix accelInertial = NULL; //inertial acceleration
 
+char OledBuffer[100];
+
 int main(void) {
     BOARD_Init();
     SERIAL_Init();
     TIMERS_Init();
     BNO055_Init();
+    OledInit();
 
     printf("\rLab 4: Closed Loop Gyro Angle Integration\n");
     InitGyroCalibration();
     InitAccelCalibration();
+    OledOn();
 
     int prevTime = 0;
     while (1) {
@@ -60,12 +65,19 @@ int main(void) {
 
             IntegrateClosedLoop();
             float* angles = MATRIX_GetEulerAngles(gyroDCM);
-            printf("\rangles: - X: %f, Y: %f, Z: %f\n", angles[0], angles[1], angles[2]);
+            
+            // display to OLED
+            sprintf(OledBuffer, "X: %.2f\nY: %.2f\nZ: %.2f\n\0", angles[0], angles[1], angles[2]);
+            OledDrawString(OledBuffer);
+            OledUpdate();
+            
+//            printf("\rangles: - X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
             free(angles);
             
             prevTime = curTime;
         }
     }
+    OledOff();
     BOARD_End();
 }
 
