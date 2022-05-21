@@ -7,9 +7,9 @@
       <itemPath>../../Common/BNO055.h</itemPath>
       <itemPath>../../Common/BOARD.h</itemPath>
       <itemPath>../../Common/I2C.h</itemPath>
+      <itemPath>../../Common/Matrix.h</itemPath>
       <itemPath>../../Common/serial.h</itemPath>
       <itemPath>../../Common/timers.h</itemPath>
-      <itemPath>../DCM_toEuler_lib/Matrix.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -18,15 +18,14 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../DCM_toEuler_lib/Matrix.c</itemPath>
       <itemPath>../../Common/BNO055.c</itemPath>
       <itemPath>../../Common/BOARD.c</itemPath>
       <itemPath>../../Common/I2C.c</itemPath>
+      <itemPath>../../Common/Matrix.c</itemPath>
       <itemPath>../../Common/serial.c</itemPath>
       <itemPath>../../Common/timers.c</itemPath>
-      <itemPath>main.c</itemPath>
-      <itemPath>angleIntegration.c</itemPath>
-      <itemPath>../../Common/closedLoopIntegration.c</itemPath>
+      <itemPath>OpenLoopAngleIntegration.c</itemPath>
+      <itemPath>ClosedLoopAngleIntegration.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -36,7 +35,6 @@
   </logicalFolder>
   <sourceRootList>
     <Elem>../../Common</Elem>
-    <Elem>../DCM_toEuler_lib</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -89,8 +87,7 @@
         <property key="enable-symbols" value="true"/>
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
-        <property key="extra-include-directories"
-                  value="..\..\Common;..\DCM_toEuler_lib"/>
+        <property key="extra-include-directories" value="..\..\Common"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="false"/>
@@ -156,7 +153,7 @@
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-cross-reference-file" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
-        <property key="heap-size" value="2000"/>
+        <property key="heap-size" value="1000"/>
         <property key="input-libraries" value=""/>
         <property key="kseg-length" value=""/>
         <property key="kseg-origin" value=""/>
@@ -171,7 +168,7 @@
         <property key="report-memory-usage" value="false"/>
         <property key="serial-length" value=""/>
         <property key="serial-origin" value=""/>
-        <property key="stack-size" value="2000"/>
+        <property key="stack-size" value=""/>
         <property key="symbol-stripping" value=""/>
         <property key="trace-symbols" value=""/>
         <property key="warn-section-align" value="false"/>
@@ -218,6 +215,8 @@
         <property key="stack-smashing" value=""/>
         <property key="wpo-lto" value="false"/>
       </C32Global>
+      <item path="OpenLoopAngleIntegration.c" ex="true" overriding="false">
+      </item>
       <PICkit3PlatformTool>
         <property key="ADC 1" value="true"/>
         <property key="AutoSelectMemRanges" value="auto"/>
@@ -362,24 +361,6 @@
         <property key="programoptions.uselvpprogramming" value="false"/>
         <property key="voltagevalue" value="3.25"/>
       </Tool>
-      <item path="angleIntegration.c" ex="true" overriding="false">
-      </item>
-      <item path="main.c" ex="true" overriding="false">
-        <C32>
-        </C32>
-        <C32-AR>
-        </C32-AR>
-        <C32-AS>
-        </C32-AS>
-        <C32-CO>
-        </C32-CO>
-        <C32-LD>
-        </C32-LD>
-        <C32CPP>
-        </C32CPP>
-        <C32Global>
-        </C32Global>
-      </item>
     </conf>
   </confs>
 </configurationDescriptor>
