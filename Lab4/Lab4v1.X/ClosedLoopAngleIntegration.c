@@ -87,9 +87,7 @@ int main(void) {
             OledDrawString(OledBuffer);
             OledUpdate();
             
-//            printf("%d, %d, %d\n", BNO055_ReadMagX(), BNO055_ReadMagY(), BNO055_ReadMagZ());
-            
-//            printf("\rangles: X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
+            printf("\rangles: X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
             
             free(angles);
             

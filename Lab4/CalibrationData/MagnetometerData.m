@@ -1,4 +1,4 @@
-magLog = [
+magData = [
 147, -94, -1352
 147, -94, -1352
 147, -94, -1352
@@ -11715,4 +11715,4 @@ magLog = [
 813, -30, -114];
 
 figure()
-scatter3(magLog(:,1), magLog(:,2), magLog(:,3))
+scatter3(magData(:,1), magData(:,2), magData(:,3))
