@@ -1,0 +1,11 @@
+Primary_Accelerometer_data = table2array(Tumble_data(:,1:3));
+Secondary_Magnetometer_data = table2array(Tumble_data(:,4:6));
+Primary_Accelerometer_data = transpose(Primary_Accelerometer_data);
+Secondary_Magnetometer_data = transpose(Secondary_Magnetometer_data);
+mi = [0; 0; -1];
+si = [0.4779; 0.1118; 0.8713];
+[Rmis, Pbody] = AlignPrimarySecondary(Primary_Accelerometer_data, Secondary_Magnetometer_data, mi, si, eye(3))
+%MagInAccelFrame = Rmis'.*Secondary_Magnetometer_data;
+e1 = -asin(Rmis(1,3))*(180/pi)
+e2 = atan2(Rmis(2,3), Rmis(3,3))*(180/pi)
+e3 = atan2(Rmis(1,2), Rmis(1,1)) *(180/pi)
