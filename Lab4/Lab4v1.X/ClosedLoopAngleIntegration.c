@@ -19,19 +19,27 @@
 #define WAIT_TIME 2000 // wait time before bias calibration
 #define CAL_TIME 2000 // 2 seconds of collecting samples for bias calibration
 
-#define DEGREE_CONVERSION 131.068
+#define DEGREE_CONVERSION 131.068 // converts raw gyro to DPS
+#define ACCEL_UNIT_SCALING 1000.0 // converst raw accel to g's
 
-#define ACCEL_UNIT_SCALING 1000.0
+//#define WITH_MAG // if included, the feedback includes magnetometer
 
 void Delay(int time); // delay function that utilizes timer library (blocking)
 
 void InitGyroCalibration(); // initializes the readings and bias vectors
 void CalculateGyroBiases(); // calculates bias and stores them in module level variables
 void UpdateGyroReadings(); // initializes gyro matrices and calculates initial biases
-void IntegrateClosedLoop(); // closed loop integration with accelerometer feedback
 
 void InitAccelCalibration(); // initializes accelerometer matrices
 void UpdateAccelReadings(); // calculates the new accelerometer readings with calibration
+
+void InitMagCalibration(); // initializes magnetometer matrices
+void UpdateMagReadings(); // calculates the new accelerometer readings with calibration and axis realignment
+
+void InitSensors(); // initializes all used sensors
+void UpdateSensors(); // updates all sensor readings
+void IntegrateClosedLoop(); // closed loop integration with accelerometer feedback
+void IntegrateClosedLoopFullMonty(); // closed loop integration with accelerometer and magnetometer feedback
 
 Matrix gyroBiases = NULL; // stores the bias of each gyro axis
 Matrix gyroReadings = NULL; // stores the current readings of each gyro axis
@@ -41,6 +49,11 @@ Matrix accelReadings = NULL; // stores the calibrated acceleration readings
 Matrix accelAMatrix = NULL; // stores the calibration scale matrix
 Matrix accelBMatrix = NULL; // stores the calibration bias vector
 Matrix accelInertial = NULL; //inertial acceleration
+
+Matrix magReadings = NULL; // stores the calibrated mag readings
+Matrix magAMatrix = NULL; // stores the calibration scale matrix
+Matrix magBMatrix = NULL; // stores the calibration bias vector
+Matrix magInertial = NULL; //inertial gravitational field
 
 char OledBuffer[100];
 
@@ -56,18 +69,17 @@ int main(void) {
     sprintf(OledBuffer, "Calibrating...\n\0");
     OledDrawString(OledBuffer);
     OledUpdate();
-    InitGyroCalibration();
-    InitAccelCalibration();
+    
+    InitSensors();
     
     OledClear(0);
     int prevTime = 0;
     while (1) {
         int curTime = TIMERS_GetMilliSeconds();
         if (abs(curTime - prevTime) > SAMPLE_TIME) {
-            UpdateAccelReadings();
-            UpdateGyroReadings();
+            UpdateSensors();
 
-            IntegrateClosedLoop();
+            IntegrateClosedLoopFullMonty();
             float* angles = MATRIX_GetEulerAngles(gyroDCM);
             
             // display to OLED
@@ -75,7 +87,10 @@ int main(void) {
             OledDrawString(OledBuffer);
             OledUpdate();
             
-            printf("\rangles: - X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
+//            printf("%d, %d, %d\n", BNO055_ReadMagX(), BNO055_ReadMagY(), BNO055_ReadMagZ());
+            
+//            printf("\rangles: X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
+            
             free(angles);
             
             prevTime = curTime;
@@ -83,6 +98,11 @@ int main(void) {
     }
     OledOff();
     BOARD_End();
+}
+
+void Delay(int time) {
+    int doneTime = TIMERS_GetMilliSeconds() + time;
+    while (TIMERS_GetMilliSeconds() < doneTime);
 }
 
 void CalculateGyroBiases() {
@@ -141,9 +161,37 @@ void InitAccelCalibration() {
     MATRIX_SetValue(accelInertial, 2, 0, -1.0);
 }
 
-void Delay(int time) {
-    int doneTime = TIMERS_GetMilliSeconds() + time;
-    while (TIMERS_GetMilliSeconds() < doneTime);
+void InitMagCalibration(){
+    magReadings = MATRIX_Init(3, 1);
+
+    // A and B calibration matrices from lab3
+    magAMatrix = MATRIX_Init(3, 3);
+    MATRIX_SetValue(magAMatrix, 0, 0, 0.0014);
+    MATRIX_SetValue(magAMatrix, 0, 1, 0.000006229);
+    MATRIX_SetValue(magAMatrix, 0, 2, 0.000007728);
+    MATRIX_SetValue(magAMatrix, 1, 0, 0.000002439);
+    MATRIX_SetValue(magAMatrix, 1, 1, 0.0015);
+    MATRIX_SetValue(magAMatrix, 1, 2, -0.00001382);
+    MATRIX_SetValue(magAMatrix, 2, 0, -0.00002548);
+    MATRIX_SetValue(magAMatrix, 2, 1, 0.00001942);
+    MATRIX_SetValue(magAMatrix, 2, 2, 0.0014);
+
+    magBMatrix = MATRIX_Init(3, 1);
+    MATRIX_SetValue(magBMatrix, 0, 0, -0.6507);
+    MATRIX_SetValue(magBMatrix, 1, 0, 0.2278);
+    MATRIX_SetValue(magBMatrix, 2, 0, 1.0207);
+    
+    // inertial normalized magnetometer vector
+    magInertial = MATRIX_Init(3, 1);
+    MATRIX_SetValue(magInertial, 0, 0, 0.4779);
+    MATRIX_SetValue(magInertial, 1, 0, 0.1118);
+    MATRIX_SetValue(magInertial, 2, 0, 0.8713);
+}
+
+void InitSensors(){
+    InitGyroCalibration();
+    InitAccelCalibration();
+    InitMagCalibration();
 }
 
 void UpdateGyroReadings() {
@@ -179,7 +227,7 @@ void UpdateAccelReadings() {
     float rZ = MATRIX_GetValue(v2, 2, 0);
     float norm = 1 / sqrt(pow(rX, 2) + pow(rY, 2) + pow(rZ, 2));
     
-    MATRIX_MultiplyScalar(v2, 1 / norm);
+    MATRIX_MultiplyScalar(v2, norm);
     MATRIX_Set(accelReadings, v2);
 
     MATRIX_Free(v1);
@@ -187,16 +235,52 @@ void UpdateAccelReadings() {
     return;
 }
 
+void UpdateMagReadings(){
+    // read raw values from BNO055 magnetometer
+    float rawX = BNO055_ReadMagX();
+    float rawY = BNO055_ReadMagY();
+    float rawZ = BNO055_ReadMagZ();
+
+    // store the readings in the accelReadings vector
+    MATRIX_SetValue(magReadings, 0, 0, rawX);
+    MATRIX_SetValue(magReadings, 1, 0, rawY);
+    MATRIX_SetValue(magReadings, 2, 0, rawZ);
+
+    // calibrate the raw data
+    Matrix v1 = MATRIX_Multiply(magAMatrix, magReadings);
+    Matrix v2 = MATRIX_Add(v1, magBMatrix);
+    
+    // normalize the readings
+    float rX = MATRIX_GetValue(v2, 0, 0);
+    float rY = MATRIX_GetValue(v2, 1, 0);
+    float rZ = MATRIX_GetValue(v2, 2, 0);
+    float norm = 1 / sqrt(pow(rX, 2) + pow(rY, 2) + pow(rZ, 2));
+    MATRIX_MultiplyScalar(v2, norm);
+    
+    //perform the axis alignment
+    
+    MATRIX_Set(magReadings, v2);
+
+    MATRIX_Free(v1);
+    MATRIX_Free(v2);
+    return;
+}
+
+void UpdateSensors(){
+    UpdateAccelReadings();
+    UpdateMagReadings();
+    UpdateGyroReadings();
+}
+
 void IntegrateClosedLoop() {
     float kp_a = 5;
     float ki_a = kp_a / 10;
 
+    // calculate wMeas
     float accels[3];
     accels[0] = MATRIX_GetValue(accelReadings, 0, 0);
     accels[1] = MATRIX_GetValue(accelReadings, 1, 0);
     accels[2] = MATRIX_GetValue(accelReadings, 2, 0);
-
-    // calculate wMeas
     Matrix abCross = MATRIX_ConstructCPMatrix(accels);
     Matrix aiR = MATRIX_Multiply(gyroDCM, accelInertial);
     Matrix wMeas = MATRIX_Multiply(abCross, aiR);
@@ -232,4 +316,74 @@ void IntegrateClosedLoop() {
     MATRIX_Free(gyroInputWithFeedback);
     MATRIX_Free(pqrMatrix);
     MATRIX_Free(exp);
+}
+
+void IntegrateClosedLoopFullMonty() {
+    float kp_a = 30;
+    float ki_a = kp_a / 10;
+    float kp_m = 20;
+    float ki_m = kp_m / 8;
+
+    // calculate wMeas_a
+    float accels[3];
+    accels[0] = MATRIX_GetValue(accelReadings, 0, 0);
+    accels[1] = MATRIX_GetValue(accelReadings, 1, 0);
+    accels[2] = MATRIX_GetValue(accelReadings, 2, 0);
+    Matrix abCross = MATRIX_ConstructCPMatrix(accels);
+    Matrix aiR = MATRIX_Multiply(gyroDCM, accelInertial);
+    Matrix wMeas_a = MATRIX_Multiply(abCross, aiR);
+    
+    // calculate wMeas_m
+    float mags[3];
+    mags[0] = MATRIX_GetValue(magReadings, 0, 0);
+    mags[1] = MATRIX_GetValue(magReadings, 1, 0);
+    mags[2] = MATRIX_GetValue(magReadings, 2, 0);
+    Matrix mbCross = MATRIX_ConstructCPMatrix(mags);
+    Matrix miR = MATRIX_Multiply(gyroDCM, magInertial);
+    Matrix wMeas_m = MATRIX_Multiply(mbCross, miR);
+
+    // calculate gyroInputWithFeedback
+    MATRIX_MultiplyScalar(wMeas_a, kp_a); // scale wMeas by kp
+    MATRIX_MultiplyScalar(wMeas_m, kp_m);
+    Matrix gyroFeedback = MATRIX_Add(wMeas_m, wMeas_a);
+    Matrix gyroInputWithFeedback = MATRIX_Add(gyroReadings, gyroFeedback);
+
+    //calculate new bias Vector
+    float deltaT = -1 * SAMPLE_TIME / 1000.0;
+    MATRIX_MultiplyScalar(wMeas_a, (1 / kp_a)); // undo scaling on wMeas_a
+    MATRIX_MultiplyScalar(wMeas_a, -1 * ki_a * deltaT); //bDot vector with wMeas_a
+    MATRIX_MultiplyScalar(wMeas_m, (1 / kp_m)); // undo scaling on wMeas_m
+    MATRIX_MultiplyScalar(wMeas_m, -1 * ki_m * deltaT); //bDot vector with wMeas_m
+    Matrix bDot = MATRIX_Add(wMeas_a, wMeas_m);
+    Matrix newBias = MATRIX_Add(gyroBiases, bDot);
+
+    //calculate new gyroDCM
+    float pqrVec[3];
+    pqrVec[0] = MATRIX_GetValue(gyroInputWithFeedback, 0, 0);
+    pqrVec[1] = MATRIX_GetValue(gyroInputWithFeedback, 1, 0);
+    pqrVec[2] = MATRIX_GetValue(gyroInputWithFeedback, 2, 0);
+    Matrix pqrMatrix = MATRIX_ConstructCPMatrix(pqrVec);
+    Matrix exp = MATRIX_Exponential(pqrMatrix, pqrVec[0], pqrVec[1], pqrVec[2], deltaT);
+    Matrix newDCM = MATRIX_Multiply(exp, gyroDCM);
+
+    // free all helper matrices
+    MATRIX_Free(abCross);
+    MATRIX_Free(aiR);
+    MATRIX_Free(wMeas_a);
+    MATRIX_Free(mbCross);
+    MATRIX_Free(miR);
+    MATRIX_Free(wMeas_m);
+    MATRIX_Free(gyroInputWithFeedback);
+    MATRIX_Free(gyroFeedback);
+    MATRIX_Free(bDot);
+    MATRIX_Free(pqrMatrix);
+    MATRIX_Free(exp);
+    
+    // free previous gyroBiases and gyroDCM
+    MATRIX_Free(gyroBiases);
+    MATRIX_Free(gyroDCM);
+
+    // set new gyroBiases and gyroDCM
+    gyroBiases = newBias;
+    gyroDCM = newDCM;
 }
