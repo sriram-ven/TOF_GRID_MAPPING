@@ -1,6 +1,20 @@
 close all
 
-[Acc,Mag,wGyro,Eul] = CreateTrajectoryData(0.02,0)
+[Acc,Mag,wGyro,Eul] = CreateTrajectoryData(0.02,1)
+
+xbias = 0;
+ybias = 0;
+zbias = 0;
+
+for i = 1:50
+    xbias = xbias + wGyro(i,1)
+    ybias = ybias + wGyro(i,2)
+    zbias = zbias + wGyro(i,3)
+end
+
+xbias = xbias / 50;
+ybias = ybias / 50;
+zbias = zbias / 50;
 
 dcm  = angle2dcm(0, 0, 0)
 % dcm = angle2dcm( Eul(1, 1) * pi / 180, Eul(1, 2) * pi / 180, Eul(1, 3 ) * pi / 180);
@@ -8,6 +22,9 @@ x_error = zeros();
 y_error = zeros();
 z_error = zeros();
 
+wGyro(:,1) = wGyro(:,1) - xbias;
+wGyro(:,2) = wGyro(:,2) - ybias;
+wGyro(:,3) = wGyro(:,3) - zbias;
 
 GscaleFactor = (1/250)*(2^15-1);    % bits/(deg/s)
 wGyro = pi .* wGyro ./ (GscaleFactor * 180);

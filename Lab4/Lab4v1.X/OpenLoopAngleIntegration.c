@@ -16,7 +16,7 @@
 
 #define SAMPLE_TIME 20 // time between samples: 50Hz -> 20ms
 #define WAIT_TIME 2000 // wait time before bias calibration
-#define CAL_TIME 10000 // 10 seconds of collecting samples for bias calibration
+#define CAL_TIME 2000 // 10 seconds of collecting samples for bias calibration
 
 #define DEGREE_CONVERSION 131.068
 
@@ -53,7 +53,8 @@ int main(void) {
 //            UpdateDCM_forwardIntegration();
             UpdateDCM_MatrixExponential();
             float* angles = MATRIX_GetEulerAngles(gyroDCM);
-            printf("\rangles: - X: %f, Y: %f, Z: %f\n", angles[0], angles[1], angles[2]);
+            printf("%f, %f, %f, ", GyroReadings[0], GyroReadings[1], GyroReadings[2]);
+            printf("%f, %f, %f\n", angles[0], angles[1], angles[2]);
             free(angles);
             
             prevTime = curTime;

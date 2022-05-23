@@ -88,6 +88,8 @@ int main(void) {
             OledDrawString(OledBuffer);
             OledUpdate();
             
+//            printf("\r %f, %f, %f, ", MATRIX_GetValue(gyroReadings, 0, 0), MATRIX_GetValue(gyroReadings, 1, 0), MATRIX_GetValue(gyroReadings, 2, 0));
+            
             printf("\rangles: X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
             
             free(angles);
