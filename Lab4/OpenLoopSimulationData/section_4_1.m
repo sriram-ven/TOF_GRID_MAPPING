@@ -19,7 +19,7 @@ psi_arr = zeros();
 for i = 1:length(Eul)
     currGyro = [wGyro(i,1); wGyro(i,2) ; wGyro(i,3)];
     dcm = IntegrateOpenLoop(dcm, currGyro, 0.02);
-    [phi, theta, psi] = dcm2angle(dcm);
+    
     x_error(i) = Eul(i, 1)*pi/180 - phi;
     y_error(i) = Eul(i, 2)*pi/180 - theta;
     z_error(i) = Eul(i, 3)*pi/180 - psi;
