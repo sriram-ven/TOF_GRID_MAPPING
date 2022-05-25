@@ -26,7 +26,7 @@ function [Rplus, Bplus] = IntegrateClosedLoop(Rminus, Bminus, gyros, mags, accel
 Kp_a=20;
 Ki_a=Kp_a/10;
 
-Kp_m=20;
+Kp_m=10;
 Ki_m=Kp_m/10;
 
 accels = accels/norm(accels);                       % set mags and accels to unit vectors
@@ -39,8 +39,8 @@ gyroInputWithBias = gyros - Bminus;
 wmeas_a = rcross(accels)*(Rminus * accelInertial); % accelerometer correction in the body frame
 wmeas_m = rcross(mags) * (Rminus * magInertial);   % magnetometer correction in the body frame
     
-gyroInputWithFeedback = gyroInputWithBias + Kp_a*wmeas_a %+ Kp_m*wmeas_m;
-bdot=-Ki_a*wmeas_a %- Ki_m*wmeas_m;
+gyroInputWithFeedback = gyroInputWithBias + Kp_a*wmeas_a + Kp_m*wmeas_m;
+bdot=-Ki_a*wmeas_a - Ki_m*wmeas_m;
     
 Rplus = Rexp(gyroInputWithFeedback, deltaT) * Rminus;
 Bplus = Bminus + bdot*deltaT;

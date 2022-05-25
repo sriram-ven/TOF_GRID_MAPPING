@@ -1,4 +1,4 @@
-trajectoryData = csvread('realData.csv');
+trajectoryData = csvread('section8RealData.csv');
 
 wGyro = zeros(length(trajectoryData), 3);
 wGyro(:,1) = trajectoryData(:,1);
@@ -11,6 +11,9 @@ Acc(:,2) = trajectoryData(:,5);
 Acc(:,3) = trajectoryData(:,6);
 
 Mag = zeros(length(trajectoryData), 3);
+Mag(:,1) = trajectoryData(:,7);
+Mag(:,2) = trajectoryData(:,8);
+Mag(:,3) = trajectoryData(:,9);
 
 xbias = 0;
 ybias = 0;
@@ -28,11 +31,11 @@ zbias = zbias / 50;
 
 B = [xbias, ybias, zbias];
 
-dcm = angle2dcm(trajectoryData(1, 7) * pi/180, trajectoryData(1, 8) * pi/180, trajectoryData(1, 9) * pi/180);
-% dcm = angle2dcm(0,0,0);
+dcm = angle2dcm(trajectoryData(1, 10) * pi/180, trajectoryData(1, 11) * pi/180, trajectoryData(1, 12) * pi/180);
 
-initMag = [0.4779; 0.1118; 0.8713];
-initAcc = [0; 0; 1];
+% initMag = [0.4779; 0.1118; 0.8713];
+initMag = [-0.4576; -0.1982; -0.8668];
+initAcc = [0; 0; -1];
 
 phi_arr = zeros();
 theta_arr = zeros();
@@ -52,23 +55,23 @@ end
 
 subplot(3, 1, 1)
 hold on
-plot(-phi_arr(1:400))
-plot(trajectoryData(1:400,9))
+plot(phi_arr)
+plot(-trajectoryData(:,12))
 hold off
-title('Calculated vs Actual Yaw (Without Magnetometer)')
+title('Calculated vs Actual Yaw (With Magnetometer)')
 
 legend('IntegrateClosedLoop', 'C Implementation')
 
 subplot(3,1, 2)
 hold on
 plot(theta_arr)
-plot(trajectoryData(:,8))
+plot(trajectoryData(:,11))
 hold off
-title('Calculated vs Actual Pitch (Without Magnetometer)')
+title('Calculated vs Actual Pitch (With Magnetometer)')
 
 subplot(3,1, 3)
 hold on
-plot(psi_arr(1:400))
-plot(trajectoryData(1:400,7))
+plot(psi_arr)
+plot(trajectoryData(:,10))
 hold off
-title('Calculated vs Actual Roll (Without Magnetometer)')
+title('Calculated vs Actual Roll (With Magnetometer)')
