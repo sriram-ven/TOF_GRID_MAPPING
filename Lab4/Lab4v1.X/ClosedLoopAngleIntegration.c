@@ -74,6 +74,10 @@ int main(void) {
     
     InitSensors();
     
+    MATRIX_Free(gyroDCM);
+    float intialAngles[3] = {80, 80, 80};
+    gyroDCM = MATRIX_ConstructEulerMatrix(intialAngles);
+    
     OledClear(0);
     int prevTime = 0;
     while (1) {
@@ -88,15 +92,8 @@ int main(void) {
             OledDrawString(OledBuffer);
             OledUpdate();
             
-//            printf("\r %f, %f, %f, ", MATRIX_GetValue(gyroReadings, 0, 0), MATRIX_GetValue(gyroReadings, 1, 0), MATRIX_GetValue(gyroReadings, 2, 0));
+            printf("\r%f, %f, %f\n", angles[0], angles[1], angles[2]);
             
-//            printf("\rangles: X: %.2f, Y: %.2f, Z: %.2f\n", angles[0], angles[1], angles[2]);
-//            printf("\r%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", MATRIX_GetValue(gyroReadings, 0, 0), MATRIX_GetValue(gyroReadings, 1, 0), MATRIX_GetValue(gyroReadings, 2, 0),
-//                                                                         MATRIX_GetValue(accelReadings, 0, 0), MATRIX_GetValue(accelReadings, 1, 0), MATRIX_GetValue(accelReadings, 2, 0), 
-//                                                                         MATRIX_GetValue(magReadings, 0, 0), MATRIX_GetValue(magReadings, 1, 0), MATRIX_GetValue(magReadings, 2, 0),
-//                                                                         angles[0], angles[1], angles[2]);
-            printf("\r%f, %f, %f, %f, %f, %f\n", MATRIX_GetValue(accelReadings, 0, 0), MATRIX_GetValue(accelReadings, 1, 0), MATRIX_GetValue(accelReadings, 2, 0),
-                                                 MATRIX_GetValue(magReadings, 0, 0), MATRIX_GetValue(magReadings, 1, 0), MATRIX_GetValue(magReadings, 2, 0));
             free(angles);
             prevTime = curTime;
         }
