@@ -192,15 +192,6 @@ void InitMagCalibration(){
     MATRIX_SetValue(magBMatrix, 2, 0, 0.7453);
     
     magAxisRotation = MATRIX_Init(3,3);
-//    MATRIX_SetValue(magAxisRotation, 0, 0, 0.9962);
-//    MATRIX_SetValue(magAxisRotation, 0, 1, 0.0181);
-//    MATRIX_SetValue(magAxisRotation, 0, 2, -0.0855);
-//    MATRIX_SetValue(magAxisRotation, 1, 0, -0.0249);
-//    MATRIX_SetValue(magAxisRotation, 1, 1, 0.9965);
-//    MATRIX_SetValue(magAxisRotation, 1, 2, -0.0794);
-//    MATRIX_SetValue(magAxisRotation, 2, 0, 0.0838);
-//    MATRIX_SetValue(magAxisRotation, 2, 1, 0.0812);
-//    MATRIX_SetValue(magAxisRotation, 2, 2, 0.9932);
     
     MATRIX_SetValue(magAxisRotation, 0, 0, -0.9993);
     MATRIX_SetValue(magAxisRotation, 0, 1, 0.0041);
@@ -215,10 +206,6 @@ void InitMagCalibration(){
 
     // inertial normalized magnetometer vector
     magInertial = MATRIX_Init(3, 1);
-//    MATRIX_SetValue(magInertial, 0, 0, 0.4779);
-//    MATRIX_SetValue(magInertial, 1, 0, 0.1118);
-//    MATRIX_SetValue(magInertial, 2, 0, 0.8713);
-    
     MATRIX_SetValue(magInertial, 0, 0, -0.4576);
     MATRIX_SetValue(magInertial, 1, 0, -0.1982);
     MATRIX_SetValue(magInertial, 2, 0, -0.8668);
