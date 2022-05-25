@@ -23,8 +23,8 @@
 void CalculateBiases(); //calculates bias and stores them in module level variables
 void Delay(int time); //delay function that utilizes timer library (blocking)
 void UpdateGyroReadings(); //integrates current sample and adds it to total angle
-void UpdateDCM_forwardIntegration();
-void UpdateDCM_MatrixExponential();
+void ForwardIntegration();
+void ExponentialIntegration();
 
 int gyroBiases[3];
 float scaleFactors[3] = {1.067, 1.036, 1.036}; //(x,y,z))
@@ -51,7 +51,7 @@ int main(void) {
         if(abs(curTime - prevTime) > SAMPLE_TIME){
             UpdateGyroReadings();
 //            UpdateDCM_forwardIntegration();
-            UpdateDCM_MatrixExponential();
+            ExponentialIntegration();
             float* angles = MATRIX_GetEulerAngles(gyroDCM);
             printf("%f, %f, %f, ", GyroReadings[0], GyroReadings[1], GyroReadings[2]);
             printf("%f, %f, %f\n", angles[0], angles[1], angles[2]);
@@ -99,7 +99,7 @@ void UpdateGyroReadings(){
     GyroReadings[2] = (gyroZ / DEGREE_CONVERSION) * M_PI / 180.0;
 }
 
-void UpdateDCM_forwardIntegration(){
+void ForwardIntegration(){
     Matrix pqrMatrix = MATRIX_ConstructCPMatrix(GyroReadings);
     Matrix m1 = MATRIX_Copy(gyroDCM);
     MATRIX_MultiplyScalar(m1,(SAMPLE_TIME/1000.0));
@@ -113,7 +113,7 @@ void UpdateDCM_forwardIntegration(){
     gyroDCM = newDCM;
 }
 
-void UpdateDCM_MatrixExponential(){
+void ExponentialIntegration(){
     Matrix pqrMatrix = MATRIX_ConstructCPMatrix(GyroReadings);
     
     float deltaT = -1 * SAMPLE_TIME / 1000.0;
