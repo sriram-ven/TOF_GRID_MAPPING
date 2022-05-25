@@ -1,11 +1,30 @@
+[Acc,Mag,wGyro,Eul] = CreateTrajectoryData(0.02, 1);
+
 GscaleFactor = (1/250)*(2^15-1);    % bits/(deg/s)
 wGyro = pi .* wGyro ./ (GscaleFactor * 180);
 
-B = [0, 0, 0];
-dcm = angle2dcm( Eul(1, 1) * pi / 180, Eul(1, 2) * pi / 180, Eul(1, 3 ) * pi / 180);
 
-initMag = [Mag(1,1); Mag(1,2); Mag(1,3)];
-initAcc = [0; 0; -1];
+xbias = 0;
+ybias = 0;
+zbias = 0;
+
+for i = 1:50
+    xbias = xbias + wGyro(i,1);
+    ybias = ybias + wGyro(i,2);
+    zbias = zbias + wGyro(i,3);
+end
+
+xbias = xbias / 50;
+ybias = ybias / 50;
+zbias = zbias / 50;
+
+B = [xbias, ybias, zbias]
+
+dcm = angle2dcm( Eul(1, 1) * pi / 180, Eul(1, 2) * pi / 180, Eul(1, 3 ) * pi / 180);
+% dcm = angle2dcm(0,0,0);
+
+initMag = [0.4779; 0.1118; 0.8713];
+initAcc = [0; 0; 1];
 
 phi_arr = zeros();
 theta_arr = zeros();
@@ -28,15 +47,20 @@ hold on
 plot(phi_arr)
 plot(Eul(:,1))
 hold off
+title('Calculated vs Actual Yaw (Without Magnetometer)')
+
+legend('calculated', 'actual')
 
 subplot(3,1, 2)
 hold on
 plot(theta_arr)
 plot(Eul(:,2))
 hold off
+title('Calculated vs Actual Pitch (Without Magnetometer)')
 
 subplot(3,1, 3)
 hold on
 plot(psi_arr)
 plot(Eul(:,3))
 hold off
+title('Calculated vs Actual Roll (Without Magnetometer)')
