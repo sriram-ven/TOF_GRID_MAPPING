@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <xc.h>
 #include <BOARD.h>
 #include <math.h>
