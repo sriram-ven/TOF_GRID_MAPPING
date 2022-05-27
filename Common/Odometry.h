@@ -1,7 +1,7 @@
 #ifndef ODO_H
 #define ODO_H
 
-char ODYMETRY_Init(void);
+char ODOMETRY_Init(void);
 
 float ODOMETRY_GetPositionX();
 float ODOMETRY_GetPositionY();

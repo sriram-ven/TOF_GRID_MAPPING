@@ -7,6 +7,8 @@
 #define FORWARD 0
 #define BACKWARD 1
 
+#define ENCODER_TICKS_PER_REVOLUTION 2160
+
 char MOTORS_Init(void);
 
 char MOTORS_SetSpeed(char motor, int dc);

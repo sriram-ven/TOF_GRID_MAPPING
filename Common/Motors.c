@@ -23,8 +23,8 @@
 
 /*
  * the encoder CN pins are as such:
- *      - leftA = CN15, RD6, pin 36
- *      - leftB = CN16, RD7, pin 37
+ *      - leftA = CN15, RD6, pin 37
+ *      - leftB = CN16, RD7, pin 36
  * 
  *      - rightA = CN17, RF4, pin 39
  *      - rightB = CN18, RF5, pin 40
@@ -332,7 +332,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR) ChangeNotice_Handler(void) {
 }
 
 
-#define MOTOR_TEST
+//#define MOTOR_TEST
 #ifdef MOTOR_TEST
 #include "serial.h"
 #include "timers.h"
