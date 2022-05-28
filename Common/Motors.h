@@ -7,6 +7,7 @@
 #define FORWARD 0
 #define BACKWARD 1
 
+#define MAX_MOTOR_SPEED 1000
 #define ENCODER_TICKS_PER_REVOLUTION 2160
 
 char MOTORS_Init(void);

@@ -10,7 +10,7 @@
 #include "timers.h"
 
 #define F_PB (BOARD_GetPBClock())
-#define TIMER_PERIOD 40  // milliseconds
+#define TIMER_PERIOD 100  // milliseconds
 #define ENCODER_TICKS_TO_RADIANS (2 * M_PI / ENCODER_TICKS_PER_REVOLUTION)
 
 #define WHEEL_RADIUS 38.0  // radius of the wheels in mm
