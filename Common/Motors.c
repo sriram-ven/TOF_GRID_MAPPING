@@ -326,7 +326,7 @@ void __ISR(_CHANGE_NOTICE_VECTOR) ChangeNotice_Handler(void) {
     if(LM_curState != LM_prevState){
         updateLeftMotorQE(LM_curState);
     }
-    if(RM_curState != LM_prevState){
+    if(RM_curState != RM_prevState){
         updateRightMotorQE(RM_curState);
     }
 }
