@@ -10,22 +10,21 @@
 #include "timers.h"
 
 #define F_PB (BOARD_GetPBClock())
-#define TIMER_PERIOD 100  // milliseconds
+#define TIMER_PERIOD 20  // milliseconds
 #define ENCODER_TICKS_TO_RADIANS (2 * M_PI / ENCODER_TICKS_PER_REVOLUTION)
 
 #define WHEEL_RADIUS 38.0  // radius of the wheels in mm
 #define BASE_WIDTH 200.0  // distance between two wheels in mm
 
-static Matrix position; // [x; y; theta]
+static Matrix pose; // [x; y; theta]
 static Matrix wheelSpeeds; // [right wheel; left wheel]
-static Matrix diffKinMatrix; // jacobian matrix used to convert wheel speed inertial cordinates
+static Matrix diffKinMatrix; // jacobian matrix used to convert wheel speed to pose
 
 char ODOMETRY_Init(void)
 {
-    // uses timer 2 to update pos
+    // uses timer 3 to update pose
     T3CON = 0;
     T3CONbits.TCKPS = 0b111; // set to 1:256 pre-scale
-//    PR2 = (F_PB / TIMER_FREQUENCY) >> 1;
     PR3 = (F_PB / 1000 * TIMER_PERIOD) >> 8;
     T3CONbits.ON = 1;
     IFS0bits.T3IF = 0;
@@ -33,7 +32,7 @@ char ODOMETRY_Init(void)
     IEC0bits.T3IE = 1;
 
     // initialize matrices
-    position = MATRIX_Init(3,1);
+    pose = MATRIX_Init(3,1);
     wheelSpeeds = MATRIX_Init(2,1);
     diffKinMatrix = MATRIX_Init(3,2);
     
@@ -63,7 +62,7 @@ void __ISR(_TIMER_3_VECTOR) Timer3IntHandler(void)
     prevLEncoder = curLEncoder;
 
     // create jacobian matrix
-    float currentDirection = MATRIX_GetValue(position, 2, 0);
+    float currentDirection = MATRIX_GetValue(pose, 2, 0);
 
     MATRIX_SetValue(diffKinMatrix, 0, 0, cosf(currentDirection) * WHEEL_RADIUS / 2);
     MATRIX_SetValue(diffKinMatrix, 0, 1, cosf(currentDirection) * WHEEL_RADIUS / 2);
@@ -75,24 +74,24 @@ void __ISR(_TIMER_3_VECTOR) Timer3IntHandler(void)
     MATRIX_MultiplyScalar(positionDot, TIMER_PERIOD / 1000.0);
 
     // update position
-    Matrix newPos = MATRIX_Add(position, positionDot);
+    Matrix newPos = MATRIX_Add(pose, positionDot);
     
-    MATRIX_Set(position, newPos);
+    MATRIX_Set(pose, newPos);
     // free matrices used
     MATRIX_Free(positionDot);
     MATRIX_Free(newPos);
 }
 
 float ODOMETRY_GetPositionX(){
-    return MATRIX_GetValue(position, 0, 0);
+    return MATRIX_GetValue(pose, 0, 0);
 }
 
 float ODOMETRY_GetPositionY(){
-    return MATRIX_GetValue(position, 1, 0);
+    return MATRIX_GetValue(pose, 1, 0);
 }
 
 float ODOMETRY_GetDirection(){
-    return MATRIX_GetValue(position, 2, 0);
+    return MATRIX_GetValue(pose, 2, 0);
 }
 
 float ODOMETRY_GetRightWheelSpeed(){
