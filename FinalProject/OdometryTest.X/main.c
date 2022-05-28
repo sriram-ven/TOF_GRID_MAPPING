@@ -10,6 +10,13 @@
 #include "Odometry.h"
 
 #define POT_RANGE 1023
+#define ENCODER_CLOSE_ENOUGH 100
+
+typedef enum {
+    INIT,
+    TURN, 
+    MOVE_FORWARD, 
+} robotState;
 
 int PotToSpeed();
 void MotorSpeedTest();
@@ -87,4 +94,39 @@ void OdometryTest() {
         Delay(21);
     }
     MOTORS_SetSpeed(LEFT_MOTOR, 0);
+}
+
+void RunSimpleRouteSM(){
+    static robotState currentState = INIT;
+    static int REncoderTarget = 0;
+    
+    int REncoder = MOTORS_GetEncoderCount(RIGHT_MOTOR);
+    switch(currentState){
+        case INIT:
+            // set up turn amount
+            REncoderTarget = REncoder + (int)(1.25 * ENCODER_TICKS_PER_REVOLUTION);
+            MOTORS_SetSpeed(RIGHT_MOTOR, 900);
+            MOTORS_SetSpeed(LEFT_MOTOR, -900);
+            currentState = TURN;
+            break;
+        case TURN:
+            if(abs(REncoder - REncoderTarget) < ENCODER_CLOSE_ENOUGH){
+                // begin moving forward
+                MOTORS_SetSpeed(RIGHT_MOTOR, 900);
+                MOTORS_SetSpeed(LEFT_MOTOR, 900);
+                // target distance is 10 wheel revolutions
+                REncoderTarget = REncoder + (int)(10 * ENCODER_TICKS_PER_REVOLUTION);
+                currentState = MOVE_FORWARD;
+            }
+            break;
+        case MOVE_FORWARD:
+            if(abs(REncoder - REncoderTarget) < ENCODER_CLOSE_ENOUGH){
+                // begin turning
+                REncoderTarget = REncoder + (int)(1.25 * ENCODER_TICKS_PER_REVOLUTION);
+                MOTORS_SetSpeed(RIGHT_MOTOR, 900);
+                MOTORS_SetSpeed(LEFT_MOTOR, -900);
+                currentState = TURN;
+            }
+            break;
+    }
 }
