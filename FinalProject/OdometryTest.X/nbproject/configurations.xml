@@ -11,6 +11,7 @@
       <itemPath>../../Common/pwm.h</itemPath>
       <itemPath>../../Common/serial.h</itemPath>
       <itemPath>../../Common/timers.h</itemPath>
+      <itemPath>../../Common/AD.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -27,6 +28,7 @@
       <itemPath>../../Common/serial.c</itemPath>
       <itemPath>../../Common/timers.c</itemPath>
       <itemPath>main.c</itemPath>
+      <itemPath>../../Common/AD.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
