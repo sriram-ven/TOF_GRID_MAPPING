@@ -1,0 +1,2 @@
+"MDF" = 0.3in
+"TopPlatformHeight" = 3in

@@ -1,5 +1,5 @@
-Primary_Accelerometer_data = table2array(Tumble_data(:,1:3));
-Secondary_Magnetometer_data = table2array(Tumble_data(:,4:6));
+Primary_Accelerometer_data = data(:,1:3);
+Secondary_Magnetometer_data = data(:,4:6);
 Primary_Accelerometer_data = transpose(Primary_Accelerometer_data);
 Secondary_Magnetometer_data = transpose(Secondary_Magnetometer_data);
 mi = [0; 0; -1];
