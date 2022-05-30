@@ -1,5 +1,5 @@
 #include "CircularBuffer.h"
-#include "Uart1.h"
+#include "Uart2.h"
 
 //CSE13E Support Library
 #include "BOARD.h"
@@ -30,7 +30,7 @@ void Uart2Init(uint32_t baudRate)
     CB_Init(&uart2RxBuffer, u2RxBuf, sizeof (u2RxBuf));
     CB_Init(&uart2TxBuffer, u2TxBuf, sizeof (u2TxBuf));
 
-#ifdef PIC32MX
+//#ifdef PIC32MX
     //the next few lines below are redundant with actions performed in BOARD_Init():
     U2MODEbits.ON = 1; //turn on UART
     U2STAbits.UTXEN = 1; //enable TX pin
@@ -49,7 +49,7 @@ void Uart2Init(uint32_t baudRate)
     IEC1bits.U2TXIE = 1; //enable TX interrupt
     IPC8bits.U2IP = 6; //set UART interrupt priority to 6
     IPC8bits.U2IS = 0; //set interrupt subpriority to 0
-#endif
+//#endif
 }
 
 void Uart2ChangeBaudRate(uint16_t brgRegister)

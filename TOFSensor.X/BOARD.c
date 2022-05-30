@@ -9,7 +9,7 @@
 #include <BOARD.h>
 #include <xc.h>
 #ifndef BOARD_TEST
-#include <serial.h>
+//#include <serial.h>
 #endif
 
 
@@ -86,7 +86,7 @@ void BOARD_Init()
 
 #ifndef BOARD_TEST
     //initializes the uart to give printf capabilities
-    SERIAL_Init();
+//    SERIAL_Init();
 #endif
     //printf("CMPE118 IO stack is now initialized\r\n");
     char Time[] = __TIME__;
