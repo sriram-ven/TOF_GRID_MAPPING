@@ -1,6 +1,12 @@
-build/default/production/TOFSensor.o: TOFSensor.c ../Common/serial.h \
- ../Common/BOARD.h
+build/default/production/TOFSensor.o: TOFSensor.c ../Common/Uart2.h \
+ ../Common/CircularBuffer.h BOARD.h ../Common/timers.h serial.h
 
-../Common/serial.h:
+../Common/Uart2.h:
 
-../Common/BOARD.h:
+../Common/CircularBuffer.h:
+
+BOARD.h:
+
+../Common/timers.h:
+
+serial.h:
