@@ -12,7 +12,7 @@
 #define RISING_EDGES_PER_REV 540
 #define TIME_PER_TICK 0.00000005
 
-#define BUFFER_SIZE 5
+#define BUFFER_SIZE 1
 
 // left motor pins
 #define LEFT_MOTOR_PWM_PIN PWM_PORTY12 // pin 5
@@ -203,6 +203,13 @@ char MOTORS_SetDirection(char motor, char direction){
             return ERROR;
     }
     return SUCCESS;
+}
+
+int MOTORS_GetDirection(char motor){
+    if(motor == LEFT_MOTOR){
+        return leftMotorDirection;
+    }
+    return rightMotorDirection;
 }
 
 char MOTORS_SetSpeed(char motor, int dc){
@@ -482,7 +489,7 @@ void __ISR(_INPUT_CAPTURE_4_VECTOR) __IC4Interrupt(void) {
 }
 
 
-// #define MOTOR_TEST
+//#define MOTOR_TEST
 #ifdef MOTOR_TEST
 #include "serial.h"
 #include "timers.h"
@@ -497,7 +504,7 @@ int main(void) {
     while(1){
         int curTime = TIMERS_GetMilliSeconds();
         if (abs(curTime - prevTime) > 20) {
-            printf("\r%f\n", MOTORS_GetMotorSpeed(RIGHT_MOTOR));
+            printf("\r%f\n", MOTORS_GetMotorSpeed(LEFT_MOTOR));
             prevTime = curTime;
         }
         
