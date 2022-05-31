@@ -1,10 +1,6 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-typedef enum{
-    POSITION_TRACKING, SPEED_TRACKING,
-}MotorMode;
-
 #define LEFT_MOTOR 0
 #define RIGHT_MOTOR 1
 
@@ -14,7 +10,7 @@ typedef enum{
 #define MAX_MOTOR_SPEED 1000
 #define ENCODER_TICKS_PER_REVOLUTION 2160
 
-char MOTORS_Init(MotorMode mode);
+char MOTORS_Init();
 
 char MOTORS_SetSpeed(char motor, int dc);
 char MOTORS_SetDirection(char motor, char direction);

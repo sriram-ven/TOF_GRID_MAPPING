@@ -13,7 +13,7 @@
 #define TIMER_PERIOD 20  // milliseconds
 #define ENCODER_TICKS_TO_RADIANS (2 * M_PI / ENCODER_TICKS_PER_REVOLUTION)
 
-#define WHEEL_RADIUS 100.0  // radius of the wheels in mm
+#define WHEEL_RADIUS 43.18  // radius of the wheels in mm
 #define BASE_WIDTH 200.0  // distance between two wheels in mm
 
 static Matrix pose; // [x; y; theta]
@@ -32,13 +32,8 @@ char ODOMETRY_Init(char mode) {
     IFS0bits.T4IF = 0;
     IPC4bits.T4IP = 3;
     IEC0bits.T4IE = 1;
-
-    if (mode == ODO_MODE1) {
-        MOTORS_Init(POSITION_TRACKING);
-    } else {
-        MOTORS_Init(SPEED_TRACKING);
-    }
-
+    
+    MOTORS_Init();
 
     // initialize matrices
     pose = MATRIX_Init(3, 1);
@@ -60,30 +55,36 @@ void __ISR(_TIMER_4_VECTOR) Timer4IntHandler(void) {
     // calculate current wheel speeds
     static int prevLEncoder = 0;
     static int prevREncoder = 0;
-
+    int curLEncoder = MOTORS_GetEncoderCount(LEFT_MOTOR);
+    int curREncoder = MOTORS_GetEncoderCount(RIGHT_MOTOR);
+    
     if (odoMode == ODO_MODE1) { // speed is calculated by integrating position
-        int curLEncoder = MOTORS_GetEncoderCount(LEFT_MOTOR);
-        int curREncoder = MOTORS_GetEncoderCount(RIGHT_MOTOR);
-
         MATRIX_SetValue(wheelSpeeds, 0, 0, ENCODER_TICKS_TO_RADIANS * (curREncoder - prevREncoder) / (TIMER_PERIOD / 1000.0));
         MATRIX_SetValue(wheelSpeeds, 1, 0, ENCODER_TICKS_TO_RADIANS * (curLEncoder - prevLEncoder) / (TIMER_PERIOD / 1000.0));
 
-        prevREncoder = curREncoder;
-        prevLEncoder = curLEncoder;
+        
     } else { // speed can be directly obtained from motor lib
         float RSpeed = MOTORS_GetMotorSpeed(RIGHT_MOTOR) * MOTORS_GetDirection(RIGHT_MOTOR);
         float LSpeed = MOTORS_GetMotorSpeed(LEFT_MOTOR) * MOTORS_GetDirection(LEFT_MOTOR);
-        if(RSpeed >= 12){
-            RSpeed = 12.0;
+        if(RSpeed >= 13){
+            RSpeed = 13.0;
         }
-        if(LSpeed >= 12){
-            LSpeed = 12.0;
+        if(LSpeed >= 13){
+            LSpeed = 13.0;
+        }
+        if(curLEncoder == prevLEncoder){ // if no change in encoder position
+            LSpeed = 0;
+        }
+        if(curREncoder == prevREncoder){ // if no change in encoder position
+            RSpeed = 0;
         }
         
         MATRIX_SetValue(wheelSpeeds, 0, 0, RSpeed);
         MATRIX_SetValue(wheelSpeeds, 1, 0, LSpeed);
     }
 
+    prevREncoder = curREncoder;
+    prevLEncoder = curLEncoder;
 
     // create jacobian matrix
     float currentDirection = MATRIX_GetValue(pose, 2, 0);

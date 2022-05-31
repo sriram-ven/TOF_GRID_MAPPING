@@ -48,9 +48,6 @@
 void CN_Init();
 void IC_Init();
 
-// current library mode: position tracking or speed tracking
-MotorMode motorMode;
-
 // current duty cycle of left and right motors
 int leftMotorDC = 0;
 int rightMotorDC = 0;
@@ -78,10 +75,8 @@ uint8_t rightMotorBufferInd = 0;
 char LM_prevState;
 char RM_prevState;
 
-char MOTORS_Init(MotorMode mode){
+char MOTORS_Init(){
     // init pwm pins
-    motorMode = mode;
-    
     PWM_Init();
     PWM_SetFrequency(MIN_PWM_FREQ);
     PWM_AddPins(LEFT_MOTOR_PWM_PIN);
@@ -97,11 +92,13 @@ char MOTORS_Init(MotorMode mode){
     MOTORS_SetDirection(RIGHT_MOTOR, FORWARD);
    
     //initialize change notify interrupt
-    if(mode == POSITION_TRACKING){
-        CN_Init();
-    }else{
-        IC_Init();
-    }
+//    if(mode == POSITION_TRACKING){
+//        CN_Init();
+//    }else{
+//        IC_Init();
+//    }
+    IC_Init();
+    CN_Init();
     return SUCCESS;
 }
 
@@ -248,10 +245,6 @@ char MOTORS_SetSpeed(char motor, int dc){
 }
 
 float MOTORS_GetMotorSpeed(char motor){
-    if(motorMode == POSITION_TRACKING){
-        printf("\rMOTORS_GetMotorSpeed is not supported for this mode\n");
-        return ERROR;
-    }
     float period = 0;
     if(motor == LEFT_MOTOR){
         for(int i = 0; i < BUFFER_SIZE; i++){
@@ -272,10 +265,6 @@ float MOTORS_GetMotorSpeed(char motor){
 }
 
 char MOTORS_SetEncoderCount(char motor, int count){
-    if(motorMode == SPEED_TRACKING){
-        printf("\rMOTOR_SetEncoderCount is not supported for this mode\n");
-        return ERROR;
-    }
     if(motor == LEFT_MOTOR){
         leftMotorEncoderCount = count;
         return SUCCESS;
@@ -288,10 +277,6 @@ char MOTORS_SetEncoderCount(char motor, int count){
 }
 
 int MOTORS_GetEncoderCount(char motor){
-    if(motorMode == SPEED_TRACKING){
-        printf("\rMOTORS_GetEncoderCount is not supported for this mode\n");
-        return ERROR;
-    }
     if(motor == LEFT_MOTOR){
         return leftMotorEncoderCount;
     }
@@ -497,14 +482,15 @@ int main(void) {
     BOARD_Init();
     SERIAL_Init();
     TIMERS_Init();
-    MOTORS_Init(SPEED_TRACKING);
+    MOTORS_Init();
     printf("\rMotors Test:\n");
     MOTORS_SetSpeed(LEFT_MOTOR, 1000);
+    MOTORS_SetSpeed(RIGHT_MOTOR, 1000);
     int prevTime = 0;
     while(1){
         int curTime = TIMERS_GetMilliSeconds();
         if (abs(curTime - prevTime) > 20) {
-            printf("\r%f\n", MOTORS_GetMotorSpeed(LEFT_MOTOR));
+            printf("\r%f, %f, %d, %d\n", MOTORS_GetMotorSpeed(LEFT_MOTOR), MOTORS_GetMotorSpeed(RIGHT_MOTOR), leftMotorEncoderCount, rightMotorEncoderCount);
             prevTime = curTime;
         }
         
