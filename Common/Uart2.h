@@ -1,5 +1,5 @@
-#ifndef UART1_H
-#define UART1_H
+#ifndef UART2_H
+#define UART2_H
 
 // USAGE:
 // Add Uart1Init() to an initialization sequence called once on startup.

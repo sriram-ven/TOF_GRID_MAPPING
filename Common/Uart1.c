@@ -45,7 +45,7 @@ void Uart1Init(uint32_t baudRate)
 
 
     // Configure UART interrupt for both RX and TX
-    IEC0bits.U1RXIE = 1; //enable RX interrupt
+    IEC0bits.U1RXIE = 0; //enable RX interrupt
     IEC0bits.U1TXIE = 1; //enable TX interrupt
     IPC6bits.U1IP = 6; //set UART interrupt priority to 6
     IPC6bits.U1IS = 0; //set interrupt subpriority to 0
