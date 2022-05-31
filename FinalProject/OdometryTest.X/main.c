@@ -12,12 +12,15 @@
 #define POT_RANGE 1023
 #define ENCODER_CLOSE_ENOUGH 100
 
-#define BASE_MOTOR_SPEED 600
+#define BASE_MOTOR_SPEED 250
+#define TURN_SPEED 800
+#define TURN_TIME 5000 // turns for 2 seconds
+#define FORWARD_TIME 3000 // moves forward for 3 seconds
 
 typedef enum {
     INIT,
-    TURN, 
-    MOVE_FORWARD, 
+    TURN,
+    MOVE_FORWARD,
 } robotState;
 
 int PotToSpeed();
@@ -28,18 +31,25 @@ void RunSimpleRouteSM();
 
 int main() {
     BOARD_Init();
-    AD_Init();
     SERIAL_Init();
     TIMERS_Init();
-    MOTORS_Init(POSITION_TRACKING);
-    ODOMETRY_Init();
+    ODOMETRY_Init(ODO_MODE2);
 
-    AD_AddPins(AD_A0);
-    
-    while (1){
-        RunSimpleRouteSM();
-//        printf("\rR: %f, L: %f\n", ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
-        Delay(21);
+    MOTORS_SetSpeed(LEFT_MOTOR, 800);
+    MOTORS_SetSpeed(RIGHT_MOTOR, 500);
+    Delay(100);
+    ODEMTRY_ResetPose();
+    int times = 0;
+    while (1) {
+        //        RunSimpleRouteSM();
+        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
+        times++;
+        if (times == 500) {
+            MOTORS_SetSpeed(LEFT_MOTOR, 0);
+            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
+            while(1);
+        }
+        Delay(20);
     }
     BOARD_End();
 }
@@ -99,43 +109,36 @@ void OdometryTest() {
     MOTORS_SetSpeed(LEFT_MOTOR, 0);
 }
 
-void RunSimpleRouteSM(){
+void RunSimpleRouteSM() {
     static robotState currentState = INIT;
-    static int LEncoderTarget = 0;
-    
-    int LEncoder = MOTORS_GetEncoderCount(LEFT_MOTOR);
-    printf("\r%f\n", ODOMETRY_GetLeftWheelSpeed());
-    switch(currentState){
+    static int doneTime = 0;
+
+    int curTime = TIMERS_GetMilliSeconds();
+    switch (currentState) {
         case INIT:
-            // set up turn amount
-            LEncoderTarget = LEncoder + (int)(6 * ENCODER_TICKS_PER_REVOLUTION);
-            printf("\rTarget: %d\n", LEncoderTarget);
-            MOTORS_SetSpeed(RIGHT_MOTOR, -BASE_MOTOR_SPEED);
+            Delay(10000);
+            MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
             MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
-            currentState = TURN;
-            printf("\rstarting turn\n");
+
+            currentState = MOVE_FORWARD;
+            doneTime = curTime + FORWARD_TIME;
             break;
         case TURN:
-            if(LEncoderTarget - LEncoder < 0){
-                // begin moving forward
+            if (doneTime - curTime < 0) {
                 MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
                 MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
-                // target distance is 10 wheel revolutions
-                LEncoderTarget = LEncoder + (int)(10 * ENCODER_TICKS_PER_REVOLUTION);
-                printf("\rTarget: %d\n", LEncoderTarget);
+
+                doneTime = curTime + FORWARD_TIME;
                 currentState = MOVE_FORWARD;
-                printf("\rstarting moving forward\n");
             }
             break;
         case MOVE_FORWARD:
-            if((LEncoderTarget - LEncoder < 0)){
-                // begin turning
-                LEncoderTarget = LEncoder + (int)(6 * ENCODER_TICKS_PER_REVOLUTION);
-                printf("\rTarget: %d\n", LEncoderTarget);
-                MOTORS_SetSpeed(RIGHT_MOTOR, -BASE_MOTOR_SPEED);
-                MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
+            if (doneTime - curTime < 0) {
+                MOTORS_SetSpeed(RIGHT_MOTOR, TURN_SPEED);
+                MOTORS_SetSpeed(LEFT_MOTOR, -TURN_SPEED);
+
+                doneTime = curTime + TURN_TIME;
                 currentState = TURN;
-                printf("\rstarting turn\n");
             }
             break;
     }
