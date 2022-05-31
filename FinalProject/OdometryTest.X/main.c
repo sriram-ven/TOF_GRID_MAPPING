@@ -36,13 +36,14 @@ int main() {
     ODOMETRY_Init(ODO_MODE2);
 
     MOTORS_SetSpeed(LEFT_MOTOR, 800);
-    MOTORS_SetSpeed(RIGHT_MOTOR, 500);
+    MOTORS_SetSpeed(RIGHT_MOTOR, 800);
     Delay(100);
     ODEMTRY_ResetPose();
     int times = 0;
     while (1) {
         //        RunSimpleRouteSM();
-        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
+//        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
+        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
         times++;
         if (times == 500) {
             MOTORS_SetSpeed(LEFT_MOTOR, 0);
