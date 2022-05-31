@@ -12,6 +12,8 @@
 #define POT_RANGE 1023
 #define ENCODER_CLOSE_ENOUGH 100
 
+#define BASE_MOTOR_SPEED 600
+
 typedef enum {
     INIT,
     TURN, 
@@ -29,7 +31,7 @@ int main() {
     AD_Init();
     SERIAL_Init();
     TIMERS_Init();
-    MOTORS_Init();
+    MOTORS_Init(POSITION_TRACKING);
     ODOMETRY_Init();
 
     AD_AddPins(AD_A0);
@@ -102,22 +104,22 @@ void RunSimpleRouteSM(){
     static int LEncoderTarget = 0;
     
     int LEncoder = MOTORS_GetEncoderCount(LEFT_MOTOR);
-    printf("\r%d\n", LEncoder);
+    printf("\r%f\n", ODOMETRY_GetLeftWheelSpeed());
     switch(currentState){
         case INIT:
             // set up turn amount
             LEncoderTarget = LEncoder + (int)(6 * ENCODER_TICKS_PER_REVOLUTION);
             printf("\rTarget: %d\n", LEncoderTarget);
-            MOTORS_SetSpeed(RIGHT_MOTOR, -900);
-            MOTORS_SetSpeed(LEFT_MOTOR, 900);
+            MOTORS_SetSpeed(RIGHT_MOTOR, -BASE_MOTOR_SPEED);
+            MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
             currentState = TURN;
             printf("\rstarting turn\n");
             break;
         case TURN:
             if(LEncoderTarget - LEncoder < 0){
                 // begin moving forward
-                MOTORS_SetSpeed(RIGHT_MOTOR, 900);
-                MOTORS_SetSpeed(LEFT_MOTOR, 900);
+                MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
+                MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
                 // target distance is 10 wheel revolutions
                 LEncoderTarget = LEncoder + (int)(10 * ENCODER_TICKS_PER_REVOLUTION);
                 printf("\rTarget: %d\n", LEncoderTarget);
@@ -130,8 +132,8 @@ void RunSimpleRouteSM(){
                 // begin turning
                 LEncoderTarget = LEncoder + (int)(6 * ENCODER_TICKS_PER_REVOLUTION);
                 printf("\rTarget: %d\n", LEncoderTarget);
-                MOTORS_SetSpeed(RIGHT_MOTOR, -900);
-                MOTORS_SetSpeed(LEFT_MOTOR, 900);
+                MOTORS_SetSpeed(RIGHT_MOTOR, -BASE_MOTOR_SPEED);
+                MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
                 currentState = TURN;
                 printf("\rstarting turn\n");
             }
