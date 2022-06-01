@@ -14,9 +14,9 @@
 
 #define BASE_MOTOR_SPEED 900
 #define TURN_SPEED 800
-#define TURN_TIME 3000 // turns for 2 seconds
+#define TURN_TIME 2000 // turns for 2 seconds
 #define STOP_TIME 1000
-#define FORWARD_TIME 3000 // moves forward for 3 seconds
+#define FORWARD_TIME 2000 // moves forward for 3 seconds
 
 typedef enum {
     INIT,
@@ -42,25 +42,25 @@ int main() {
     Delay(5000);
     ODEMTRY_ResetPose();
     while (1) {
-        if(speed > 1000){
-            while(1);
-        }
-        MOTORS_SetSpeed(LEFT_MOTOR, speed);
-        for(int i = 0; i < 10; i++){
-            printf("\r%d, %f\n", speed, ODOMETRY_GetLeftWheelSpeed());
-            Delay(10);
-        }
-
-        speed += 2;
-        
-//        if (TIMERS_GetMilliSeconds() > endTime) {
-//            MOTORS_SetSpeed(LEFT_MOTOR, 0);
-//            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
-//            while (1);
+//        if(speed > 1000){
+//            while(1);
 //        }
-//        RunSimpleRouteSM();
+//        MOTORS_SetSpeed(LEFT_MOTOR, speed);
+//        for(int i = 0; i < 10; i++){
+//            printf("\r%d, %f\n", speed, ODOMETRY_GetLeftWheelSpeed());
+//            Delay(10);
+//        }
+//
+//        speed += 2;
+//        
+        if (TIMERS_GetMilliSeconds() > endTime) {
+            MOTORS_SetSpeed(LEFT_MOTOR, 0);
+            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
+            while (1);
+        }
+        RunSimpleRouteSM();
         
-//        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
+        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
         //        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
     }
     BOARD_End();
