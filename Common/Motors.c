@@ -12,7 +12,7 @@
 #define RISING_EDGES_PER_REV 540
 #define TIME_PER_TICK 0.00000005
 
-#define BUFFER_SIZE 1
+#define BUFFER_SIZE 10
 
 // left motor pins
 #define LEFT_MOTOR_PWM_PIN PWM_PORTY12 // pin 5
@@ -244,6 +244,13 @@ char MOTORS_SetSpeed(char motor, int dc){
     return SUCCESS;
 }
 
+int MOTORS_GetDutyCycle(char motor){
+    if(motor == LEFT_MOTOR){
+        return leftMotorDC;
+    }
+    return rightMotorDC;
+}
+
 float MOTORS_GetMotorSpeed(char motor){
     float period = 0;
     if(motor == LEFT_MOTOR){
@@ -437,6 +444,7 @@ void __ISR(_INPUT_CAPTURE_3_VECTOR) __IC3Interrupt(void) {
     }else{
         LeftEncoderPeriod = curTime - prevTime;
     }
+    
     // put new value into circular buffer
     leftMotorPeriodBuffer[leftMotorBufferInd] = LeftEncoderPeriod;
     leftMotorBufferInd = (leftMotorBufferInd + 1) % BUFFER_SIZE;
@@ -484,13 +492,13 @@ int main(void) {
     TIMERS_Init();
     MOTORS_Init();
     printf("\rMotors Test:\n");
-    MOTORS_SetSpeed(LEFT_MOTOR, 1000);
-    MOTORS_SetSpeed(RIGHT_MOTOR, 1000);
+    MOTORS_SetSpeed(LEFT_MOTOR, 100);
+    MOTORS_SetSpeed(RIGHT_MOTOR, 0);
     int prevTime = 0;
     while(1){
         int curTime = TIMERS_GetMilliSeconds();
         if (abs(curTime - prevTime) > 20) {
-            printf("\r%f, %f, %d, %d\n", MOTORS_GetMotorSpeed(LEFT_MOTOR), MOTORS_GetMotorSpeed(RIGHT_MOTOR), leftMotorEncoderCount, rightMotorEncoderCount);
+            printf("\r%d\n", LeftEncoderPeriod);
             prevTime = curTime;
         }
         

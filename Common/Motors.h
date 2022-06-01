@@ -15,6 +15,7 @@ char MOTORS_Init();
 char MOTORS_SetSpeed(char motor, int dc);
 char MOTORS_SetDirection(char motor, char direction);
 int MOTORS_GetDirection(char motor); // -1: counter-clockwise, 1: clockwise
+int MOTORS_GetDutyCycle(char motor);
 
 // position tracking mode functions
 char MOTORS_SetEncoderCount(char motor, int count);
