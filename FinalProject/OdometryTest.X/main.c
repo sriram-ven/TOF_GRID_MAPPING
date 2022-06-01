@@ -12,15 +12,17 @@
 #define POT_RANGE 1023
 #define ENCODER_CLOSE_ENOUGH 100
 
-#define BASE_MOTOR_SPEED 250
+#define BASE_MOTOR_SPEED 900
 #define TURN_SPEED 800
-#define TURN_TIME 5000 // turns for 2 seconds
+#define TURN_TIME 3000 // turns for 2 seconds
+#define STOP_TIME 1000
 #define FORWARD_TIME 3000 // moves forward for 3 seconds
 
 typedef enum {
     INIT,
     TURN,
     MOVE_FORWARD,
+    STOP,
 } robotState;
 
 int PotToSpeed();
@@ -34,23 +36,32 @@ int main() {
     SERIAL_Init();
     TIMERS_Init();
     ODOMETRY_Init(ODO_MODE2);
-
-    MOTORS_SetSpeed(LEFT_MOTOR, 800);
-    MOTORS_SetSpeed(RIGHT_MOTOR, 800);
-    Delay(100);
+    
+    int speed = 0;
+    int endTime = TIMERS_GetMilliSeconds() + 30000; //30 seconds
+    Delay(5000);
     ODEMTRY_ResetPose();
-    int times = 0;
     while (1) {
-        //        RunSimpleRouteSM();
-//        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
-        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
-        times++;
-        if (times == 500) {
-            MOTORS_SetSpeed(LEFT_MOTOR, 0);
-            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
+        if(speed > 1000){
             while(1);
         }
-        Delay(20);
+        MOTORS_SetSpeed(LEFT_MOTOR, speed);
+        for(int i = 0; i < 10; i++){
+            printf("\r%d, %f\n", speed, ODOMETRY_GetLeftWheelSpeed());
+            Delay(10);
+        }
+
+        speed += 2;
+        
+//        if (TIMERS_GetMilliSeconds() > endTime) {
+//            MOTORS_SetSpeed(LEFT_MOTOR, 0);
+//            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
+//            while (1);
+//        }
+//        RunSimpleRouteSM();
+        
+//        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
+        //        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
     }
     BOARD_End();
 }
@@ -117,13 +128,33 @@ void RunSimpleRouteSM() {
     int curTime = TIMERS_GetMilliSeconds();
     switch (currentState) {
         case INIT:
-            Delay(10000);
             MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
             MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
 
             currentState = MOVE_FORWARD;
             doneTime = curTime + FORWARD_TIME;
             break;
+            
+        case MOVE_FORWARD:
+            if (doneTime - curTime < 0) {
+                MOTORS_SetSpeed(RIGHT_MOTOR, 0);
+                MOTORS_SetSpeed(LEFT_MOTOR, 0);
+
+                doneTime = curTime + STOP;
+                currentState = STOP;
+            }
+            break;
+            
+        case STOP:
+            if (doneTime - curTime < 0) {
+                MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
+                MOTORS_SetSpeed(LEFT_MOTOR, -BASE_MOTOR_SPEED);
+
+                doneTime = curTime + TURN_TIME;
+                currentState = TURN;
+            }
+            break;
+            
         case TURN:
             if (doneTime - curTime < 0) {
                 MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
@@ -133,14 +164,6 @@ void RunSimpleRouteSM() {
                 currentState = MOVE_FORWARD;
             }
             break;
-        case MOVE_FORWARD:
-            if (doneTime - curTime < 0) {
-                MOTORS_SetSpeed(RIGHT_MOTOR, TURN_SPEED);
-                MOTORS_SetSpeed(LEFT_MOTOR, -TURN_SPEED);
 
-                doneTime = curTime + TURN_TIME;
-                currentState = TURN;
-            }
-            break;
     }
 }
