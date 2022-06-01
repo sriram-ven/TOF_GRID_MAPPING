@@ -12,7 +12,7 @@
 #define RISING_EDGES_PER_REV 540
 #define TIME_PER_TICK 0.00000005
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 15
 
 // left motor pins
 #define LEFT_MOTOR_PWM_PIN PWM_PORTY12 // pin 5

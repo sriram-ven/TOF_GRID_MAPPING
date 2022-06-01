@@ -9,6 +9,7 @@
 
 #define MAX_MOTOR_SPEED 1000
 #define ENCODER_TICKS_PER_REVOLUTION 2160
+#define DC_SWITCH 200 // if the speed is slower than this speed, speed is calculated with integration
 
 char MOTORS_Init();
 

@@ -16,7 +16,7 @@
 #define WHEEL_RADIUS 43.18  // radius of the wheels in mm
 #define BASE_WIDTH 200.0  // distance between two wheels in mm
 
-#define DC_SWITCH 150 // if the speed is slower than this speed, speed is calculated with integration
+#define MAX_SPEED 13.0
 #define VALID_DISTANCE_RANGE 6.0
 
 static Matrix pose; // [x; y; theta]
@@ -66,10 +66,10 @@ void __ISR(_TIMER_4_VECTOR) Timer4IntHandler(void) {
     float LSpeed = MOTORS_GetMotorSpeed(LEFT_MOTOR) * MOTORS_GetDirection(LEFT_MOTOR);
 
     // at lower speeds use derivative of encoder code
-    if (MOTORS_GetDutyCycle(LEFT_MOTOR) < DC_SWITCH) {
+    if ((MOTORS_GetDutyCycle(LEFT_MOTOR) < DC_SWITCH) || (abs(LSpeed) >= MAX_SPEED)) {
         LSpeed =  ENCODER_TICKS_TO_RADIANS * (curLEncoder - prevLEncoder) / (TIMER_PERIOD / 1000.0);
     }
-    if (MOTORS_GetDutyCycle(RIGHT_MOTOR) < DC_SWITCH) {
+    if ((MOTORS_GetDutyCycle(RIGHT_MOTOR) < DC_SWITCH)  || (abs(RSpeed) >= MAX_SPEED)) {
         RSpeed = ENCODER_TICKS_TO_RADIANS * (curREncoder - prevREncoder) / (TIMER_PERIOD / 1000.0);
     }
 
