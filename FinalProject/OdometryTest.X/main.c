@@ -9,7 +9,7 @@
 #include "Motors.h"
 #include "Odometry.h"
 
-#define POT_RANGE 1023
+#define POT_RANGE 1023 // max potentiometer reading value
 #define ENCODER_CLOSE_ENOUGH 100
 
 #define BASE_MOTOR_SPEED 900
@@ -18,6 +18,7 @@
 #define STOP_TIME 1000
 #define FORWARD_TIME 2000 // moves forward for 3 seconds
 
+// States for robot state machine
 typedef enum {
     INIT,
     TURN,
@@ -32,6 +33,7 @@ void Delay(int time);
 void RunSimpleRouteSM();
 
 int main() {
+    // Initializations
     BOARD_Init();
     SERIAL_Init();
     TIMERS_Init();
@@ -40,6 +42,7 @@ int main() {
     int speed = 0;
     int endTime = TIMERS_GetMilliSeconds() + 30000; //30 seconds
     Delay(5000);
+    // Reset position
     ODEMTRY_ResetPose();
     while (1) {
 //        if(speed > 1000){
@@ -66,17 +69,34 @@ int main() {
     BOARD_End();
 }
 
+/**
+ * @Function Delay(int time)
+ * @param Time for delay.
+ * @return None.
+ * @brief  Helper function used in order to add delays when necessary */
 void Delay(int time) {
+    // Calculate done time for delays
     int doneTime = TIMERS_GetMilliSeconds() + time;
+    // While loop used for adding a delay
     while (TIMERS_GetMilliSeconds() < doneTime);
 }
 
+/**
+ * @Function PotToSpeed()
+ * @param None.
+ * @return speed.
+ * @brief  Converts potentiometer readings to a speed */
 int PotToSpeed() {
     int potVal = AD_ReadADPin(AD_A0);
     int speed = (potVal - (POT_RANGE / 2)) * 2 * MAX_MOTOR_SPEED / POT_RANGE;
     return speed;
 }
 
+/**
+ * @Function MotorSpeedTest()
+ * @param None.
+ * @return None.
+ * @brief  Function used to test the accuracy of the calculated motor speeds */
 void MotorSpeedTest() {
     int speed = 0;
     MOTORS_SetSpeed(LEFT_MOTOR, speed);
@@ -121,46 +141,59 @@ void OdometryTest() {
     MOTORS_SetSpeed(LEFT_MOTOR, 0);
 }
 
-void RunSimpleRouteSM() {
+/**
+ * @Function RunSimpleRouteSM()
+ * @param None.
+ * @return None.
+ * @brief  Robot state machine responsible for the controlling the robot's motion */
+ void RunSimpleRouteSM() {
     static robotState currentState = INIT;
     static int doneTime = 0;
 
     int curTime = TIMERS_GetMilliSeconds();
     switch (currentState) {
         case INIT:
+            // Set motors to move forward
             MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
             MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
-
+            // Transition into next state
             currentState = MOVE_FORWARD;
+            // Obtain done time based off which we stop the motors in the next state
             doneTime = curTime + FORWARD_TIME;
             break;
             
         case MOVE_FORWARD:
             if (doneTime - curTime < 0) {
+                // Once forward time runs out we stop the motors
                 MOTORS_SetSpeed(RIGHT_MOTOR, 0);
                 MOTORS_SetSpeed(LEFT_MOTOR, 0);
 
                 doneTime = curTime + STOP;
+                // Transition into next state
                 currentState = STOP;
             }
             break;
             
         case STOP:
             if (doneTime - curTime < 0) {
+                // Once stop time runs out we set the motors to go in opposite directions to turn the bot
                 MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
                 MOTORS_SetSpeed(LEFT_MOTOR, -BASE_MOTOR_SPEED);
 
                 doneTime = curTime + TURN_TIME;
+                // Transition into next state
                 currentState = TURN;
             }
             break;
             
         case TURN:
             if (doneTime - curTime < 0) {
+                // Once turn time runs out we set the motors the base speed so that the bot can move forward
                 MOTORS_SetSpeed(RIGHT_MOTOR, BASE_MOTOR_SPEED);
                 MOTORS_SetSpeed(LEFT_MOTOR, BASE_MOTOR_SPEED);
 
                 doneTime = curTime + FORWARD_TIME;
+                // Transition into next state
                 currentState = MOVE_FORWARD;
             }
             break;
