@@ -19,6 +19,7 @@
 #define FORWARD_TIME 2000 // moves forward for 3 seconds
 
 // States for robot state machine
+
 typedef enum {
     INIT,
     TURN,
@@ -39,30 +40,22 @@ int main() {
     TIMERS_Init();
     ODOMETRY_Init(ODO_MODE2);
     
-    int speed = 0;
-    int endTime = TIMERS_GetMilliSeconds() + 30000; //30 seconds
     Delay(5000);
     // Reset position
     ODEMTRY_ResetPose();
+    int endTime = TIMERS_GetMilliSeconds() + 2000; //30 seconds
+    MOTORS_SetSpeed(LEFT_MOTOR, 1000);
+    MOTORS_SetSpeed(RIGHT_MOTOR, 1000);
+
     while (1) {
-//        if(speed > 1000){
-//            while(1);
-//        }
-//        MOTORS_SetSpeed(LEFT_MOTOR, speed);
-//        for(int i = 0; i < 10; i++){
-//            printf("\r%d, %f\n", speed, ODOMETRY_GetLeftWheelSpeed());
-//            Delay(10);
-//        }
-//
-//        speed += 2;
-     
+
         if (TIMERS_GetMilliSeconds() > endTime) {
             MOTORS_SetSpeed(LEFT_MOTOR, 0);
             MOTORS_SetSpeed(RIGHT_MOTOR, 0);
             while (1);
         }
-        RunSimpleRouteSM();
-        
+        //        RunSimpleRouteSM();
+
         printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
         //        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
     }
@@ -146,7 +139,7 @@ void OdometryTest() {
  * @param None.
  * @return None.
  * @brief  Robot state machine responsible for the controlling the robot's motion */
- void RunSimpleRouteSM() {
+void RunSimpleRouteSM() {
     static robotState currentState = INIT;
     static int doneTime = 0;
 
@@ -161,7 +154,7 @@ void OdometryTest() {
             // Obtain done time based off which we stop the motors in the next state
             doneTime = curTime + FORWARD_TIME;
             break;
-            
+
         case MOVE_FORWARD:
             if (doneTime - curTime < 0) {
                 // Once forward time runs out we stop the motors
@@ -173,7 +166,7 @@ void OdometryTest() {
                 currentState = STOP;
             }
             break;
-            
+
         case STOP:
             if (doneTime - curTime < 0) {
                 // Once stop time runs out we set the motors to go in opposite directions to turn the bot
@@ -185,7 +178,7 @@ void OdometryTest() {
                 currentState = TURN;
             }
             break;
-            
+
         case TURN:
             if (doneTime - curTime < 0) {
                 // Once turn time runs out we set the motors the base speed so that the bot can move forward
