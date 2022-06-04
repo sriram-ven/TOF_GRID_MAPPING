@@ -5,6 +5,7 @@
 //#include "serial.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "string.h"
 #include <xc.h>
 
 #define UART_1
@@ -21,11 +22,12 @@ int main(void) {
     TRISE = 0x00;
     LATE = 0x00;
 
-    static uint8_t msg;
+    static uint8_t msg[7];
     static uint8_t i = 0, j = 0;
     static uint8_t ps[20][5];
+    static unsigned int val;
 
-    Uart1WriteData("LET THE TEST BEGIN\n", 19);
+    Uart1WriteData("Readings in one (1) second\n", 19);
     while (!U1STAbits.TRMT);
 
     /* this was me testing how many samples we can get in one second,
@@ -43,6 +45,20 @@ int main(void) {
     }
     for (j = 0; j < 20; j++) {
         Uart1WriteData(&ps[j], 5);
+    }
+    Uart1WriteData("Constant Readings\n", 18);
+    i = 0;
+    while (1) {
+        if (Uart1HasData()) {
+            Uart1ReadByte(&msg[i]);
+            if (msg[i] == '\n') {
+                Uart1WriteData(&msg, i + 1);
+                i = 0;
+                memset(&msg, '\0', 7);
+            } else {
+                i++;
+            }
+        }
     }
 }
 #endif

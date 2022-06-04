@@ -6,11 +6,16 @@
 
 #include <xc.h>
 #include <sys/attribs.h>
+#include <ctype.h>
+
+#define PING_SAMPLES 10
+#define MAX_LENGTH 7
 
 static CircularBuffer uart2RxBuffer;
 static uint8_t u2RxBuf[1024];
 static CircularBuffer uart2TxBuffer;
 static uint8_t u2TxBuf[1024];
+static unsigned int pingDistance[PING_SAMPLES];
 
 /*
  * Private functions.
@@ -29,9 +34,9 @@ void Uart2Init(uint32_t baudRate) {
     CB_Init(&uart2RxBuffer, u2RxBuf, sizeof (u2RxBuf));
     CB_Init(&uart2TxBuffer, u2TxBuf, sizeof (u2TxBuf));
 
-    PMCONbits.ON=0;
-    I2C2CONbits.ON=0;
-    CNCONbits.ON=0;
+    PMCONbits.ON = 0;
+    I2C2CONbits.ON = 0;
+    CNCONbits.ON = 0;
     Uart2ChangeBaudRate(259);
 
     U2MODE = 0;
@@ -39,19 +44,19 @@ void Uart2Init(uint32_t baudRate) {
     IEC1bits.U2RXIE = 1; //enable RX interrupt
     IPC8bits.U2IP = 3; //set UART interrupt priority to 6
     IPC8bits.U2IS = 1; //set interrupt subpriority to 0
-    
+
     U2STAbits.URXISEL = 0b00; //interrupt when RX is not empty (has at least 1 character)
 
     U2STAbits.URXEN = 1; //enable RX oun
     U2MODEbits.ON = 1; //turn on UART
     //    U2STAbits.UTXEN = 1; //enable TX pin
-    
+
 
     // The FIFO mode here for transmission is not set to `*_TX_BUFFER_EMPTY` as that seems to fail
     // with some characters dropped. This method, waiting until transmission is finished, is
     // technically slower, but works quite nicely.
 
-//    U2STAbits.UTXISEL = 0b01; //interrupt when transmission is complete
+    //    U2STAbits.UTXISEL = 0b01; //interrupt when transmission is complete
 
 
     // Configure UART interrupt for both RX and TX
@@ -124,14 +129,16 @@ int Uart2WriteData(const void *data, size_t length) {
 #ifdef PIC32MX
 
 void __ISR(_UART_2_VECTOR, ipl3auto) Uart2Interrupt(void) {
+    static uint8_t read[MAX_LENGTH];
+    static uint8_t i;
+
     // if receive flag is set, handle received character input
-    LATE ^= 0x01;
     if (IFS1bits.U2RXIF) {
-        LATE ^= 0x02;
         // Keep receiving new bytes while the buffer has data.
         while (U2STAbits.URXDA == 1) {
-            LATE ^=0x08;
-            CB_WriteByte(&uart2RxBuffer, (uint8_t) U2RXREG);
+            read[i] = (uint8_t) U2RXREG;
+            i = (i < MAX_LENGTH) ? (i + 1) : 0;
+            //            CB_WriteByte(&uart2RxBuffer, (uint8_t) U2RXREG);
         }
 
         // Clear buffer overflow bit if triggered

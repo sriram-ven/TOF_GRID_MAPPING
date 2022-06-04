@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "xc.h"
 #include "BOARD.h"
 #include "AD.h"
@@ -8,15 +9,20 @@
 #include "Matrix.h"
 #include "Motors.h"
 #include "Odometry.h"
+#include "Uart1.h"
+//#include "serial.h"
 
 #define POT_RANGE 1023 // max potentiometer reading value
 #define ENCODER_CLOSE_ENOUGH 100
 
-#define BASE_MOTOR_SPEED 900
-#define TURN_SPEED 800
-#define TURN_TIME 2000 // turns for 2 seconds
-#define STOP_TIME 1000
-#define FORWARD_TIME 2000 // moves forward for 3 seconds
+#define BASE_MOTOR_SPEED 500
+#define TURN_SPEED 400
+#define TURN_TIME 200 // turns for 2 seconds
+#define STOP_TIME 3000
+#define FORWARD_TIME 300 // moves forward for 3 seconds
+#define PING_LENGTH 7
+
+#define BUFFER_SIZE 100
 
 // States for robot state machine
 
@@ -36,27 +42,45 @@ void RunSimpleRouteSM();
 int main() {
     // Initializations
     BOARD_Init();
-    SERIAL_Init();
+    //    SERIAL_Init();
     TIMERS_Init();
     ODOMETRY_Init(ODO_MODE2);
-    
-    Delay(5000);
+    Uart1Init(9600);
+
+    static uint8_t ping[PING_LENGTH], i;
+    static char msg[BUFFER_SIZE];
+
+    //    Delay(5000);
     // Reset position
     ODEMTRY_ResetPose();
-    int endTime = TIMERS_GetMilliSeconds() + 2000; //30 seconds
-    MOTORS_SetSpeed(LEFT_MOTOR, 1000);
-    MOTORS_SetSpeed(RIGHT_MOTOR, 1000);
+    int endTime = TIMERS_GetMilliSeconds() + 10000; //30 seconds
+    //    MOTORS_SetSpeed(LEFT_MOTOR, 1000);
+    //    MOTORS_SetSpeed(RIGHT_MOTOR, 1000);
 
     while (1) {
 
-        if (TIMERS_GetMilliSeconds() > endTime) {
-            MOTORS_SetSpeed(LEFT_MOTOR, 0);
-            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
-            while (1);
-        }
-        //        RunSimpleRouteSM();
+//        if (TIMERS_GetMilliSeconds() > endTime) {
+//            MOTORS_SetSpeed(LEFT_MOTOR, 0);
+//            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
+//            while (1);
+//        }
 
-        printf("\r%f, %f, %f, %f, %f\n", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed());
+        if (Uart1HasData()) {
+            Uart1ReadByte(&ping[i]);
+            if (ping[i] == '\n') {
+                //                Uart1WriteData(&ping, i + 1);
+                sprintf(msg, "\r%f, %f, %f, %f, %f, %s", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed(), ping);
+                //                printf("\r%f, %f, %f, %f, %f, %s", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed(), ping);
+                Uart1WriteData(msg, BUFFER_SIZE);
+                i = 0;
+                memset(&ping, '\0', 7);
+            } else {
+                i++;
+            }
+        }
+        RunSimpleRouteSM();
+
+
         //        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
     }
     BOARD_End();
