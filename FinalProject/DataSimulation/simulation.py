@@ -43,6 +43,5 @@ def update(frame):
 
     return patches
 
-ani = FuncAnimation(fig, update, frames=None,
-                    init_func=init, blit=True)
+ani = FuncAnimation(fig, update, frames=None, init_func=init, blit=True, interval = 10)
 plt.show()
