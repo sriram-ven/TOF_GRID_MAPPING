@@ -42,35 +42,21 @@ void RunSimpleRouteSM();
 int main() {
     // Initializations
     BOARD_Init();
-    //    SERIAL_Init();
     TIMERS_Init();
-    ODOMETRY_Init(ODO_MODE2);
+    ODOMETRY_Init();
     Uart1Init(9600);
 
     static uint8_t ping[PING_LENGTH], i;
     static char msg[BUFFER_SIZE];
 
-    //    Delay(5000);
     // Reset position
     ODEMTRY_ResetPose();
-    int endTime = TIMERS_GetMilliSeconds() + 10000; //30 seconds
-    //    MOTORS_SetSpeed(LEFT_MOTOR, 1000);
-    //    MOTORS_SetSpeed(RIGHT_MOTOR, 1000);
 
     while (1) {
-
-//        if (TIMERS_GetMilliSeconds() > endTime) {
-//            MOTORS_SetSpeed(LEFT_MOTOR, 0);
-//            MOTORS_SetSpeed(RIGHT_MOTOR, 0);
-//            while (1);
-//        }
-
         if (Uart1HasData()) {
             Uart1ReadByte(&ping[i]);
             if (ping[i] == '\n') {
-                //                Uart1WriteData(&ping, i + 1);
                 sprintf(msg, "\r%f, %f, %f, %f, %f, %s", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed(), ping);
-                //                printf("\r%f, %f, %f, %f, %f, %s", ODOMETRY_GetPositionX(), ODOMETRY_GetPositionY(), ODOMETRY_GetDirection(), ODOMETRY_GetRightWheelSpeed(), ODOMETRY_GetLeftWheelSpeed(), ping);
                 Uart1WriteData(msg, BUFFER_SIZE);
                 i = 0;
                 memset(&ping, '\0', 7);
@@ -79,9 +65,6 @@ int main() {
             }
         }
         RunSimpleRouteSM();
-
-
-        //        printf("\r%f, %f, %d, %d\n", ODOMETRY_GetLeftWheelSpeed(), ODOMETRY_GetRightWheelSpeed(), MOTORS_GetEncoderCount(LEFT_MOTOR), MOTORS_GetEncoderCount(RIGHT_MOTOR));
     }
     BOARD_End();
 }
