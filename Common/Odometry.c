@@ -23,10 +23,7 @@ static Matrix pose; // [x; y; theta]
 static Matrix wheelSpeeds; // [right wheel; left wheel]
 static Matrix diffKinMatrix; // jacobian matrix used to convert wheel speed to pose
 
-char odoMode;
-
-char ODOMETRY_Init(char mode) {
-    odoMode = mode;
+char ODOMETRY_Init() {
     // uses timer 4 to update pose
     T4CON = 0;
     T4CONbits.TCKPS = 0b111; // set to 1:256 pre-scale

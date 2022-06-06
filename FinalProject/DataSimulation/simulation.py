@@ -13,7 +13,7 @@ dataPoints = [plt.plot([], [], 'ro')[0]]
 robot = [plt.plot([], [])[0]]
 patches = dataPoints + robot
 
-sweeper = Sweeper(0,0,0,600)
+sweeper = Sweeper(0,0,0,400)
 truePoints = sweeper.environment.extractPoints()
 plt.plot(truePoints[0], truePoints[1])
 
