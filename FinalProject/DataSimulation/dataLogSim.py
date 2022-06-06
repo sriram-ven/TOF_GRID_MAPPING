@@ -11,7 +11,7 @@ print("Connecting to hello world server…")
 socket = context.socket(zmq.REQ)
 socket.connect("tcp://localhost:5555")
 
-sweeper = Sweeper(50,50,0,50) # x, y, theta, view range
+sweeper = Sweeper(0,0,0,400) # x, y, theta, view range
 
 for x in range(100):
     data = sweeper.getSweepData()

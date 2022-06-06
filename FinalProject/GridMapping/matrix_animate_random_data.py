@@ -1,7 +1,8 @@
 ''' 
 this script needs to be run in conjunction with dataLogSim.py
 dataLogSim.py serves as a publisher producing simulated data, and this 
-file is the subscriber which plots the received data
+file is the subscriber which plots the received data. This file MUST
+be run before dataLogSim.py
 '''
 
 from re import X
@@ -64,7 +65,7 @@ def plotPixel(a, x1, y1, x2, y2, dx, dy, decide):
 
 
 fig,ax = plt.subplots(1,1)
-a = numpy.multiply(0.5, numpy.ones((100, 100)))
+a = numpy.multiply(0.5, numpy.ones((1000, 1000)))
 im = ax.imshow(a, cmap=plt.get_cmap('Blues'), interpolation='nearest', vmin=0, vmax=1.0)
 
 while True:       
@@ -80,8 +81,8 @@ while True:
     time.sleep(1)
     socket.send(b"ack")
 
-    x1 = data[0]
-    y1 = data[1]
+    x1 = data[0] + 500
+    y1 = data[1] + 500
     theta = math.degrees(data[2]) % 360.0
     ping = data[3]
 
