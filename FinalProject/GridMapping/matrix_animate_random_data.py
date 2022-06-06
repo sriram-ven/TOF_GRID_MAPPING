@@ -1,3 +1,9 @@
+''' 
+this script needs to be run in conjunction with dataLogSim.py
+dataLogSim.py serves as a publisher producing simulated data, and this 
+file is the subscriber which plots the received data
+'''
+
 from re import X
 import matplotlib.pyplot as plt
 import numpy

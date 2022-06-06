@@ -4,7 +4,7 @@ from line import Line
 from vector import Vector
 
 class Environment:
-    def __init__(self, amountPoints = 50, radius = 50, noise = 10):
+    def __init__(self, amountPoints = 50, radius = 400, noise = 40):
         self.amountPoints = amountPoints
         self.radius = radius
         self.noise = noise

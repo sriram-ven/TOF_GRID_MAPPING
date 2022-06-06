@@ -1,3 +1,7 @@
+'''
+this python script uses a graph to plot ping data in real time
+'''
+
 import serial
 import time
 import math
@@ -6,15 +10,16 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
-ser = serial.Serial(port="COM7", baudrate=115200)
+ser = serial.Serial(port="COM9", baudrate=115200)
 
 plt.ion()
 fig, ax = plt.subplots()
 
 xdata, ydata = [], []
 sc = ax.scatter(xdata, ydata)
-plt.xlim(-5,5)
-plt.ylim(-5,5)
+
+plt.xlim(-10000,10000)
+plt.ylim(-10000,10000)
 plt.draw()
 plt.grid(True)
 
@@ -37,7 +42,7 @@ while(1):
     dist_x = ping * math.cos(math.radians(theta))
     dist_y = ping * math.sin(math.radians(theta))
 
-    print(dist_x, " ", dist_y)
+    print(x, " ", y)
 
     xdata.append(x + dist_x)
     ydata.append(y + dist_y)
@@ -45,7 +50,7 @@ while(1):
     sc.set_offsets(np.c_[xdata,ydata])
     fig.canvas.draw_idle()
     plt.pause(0.1)
-    time.sleep(1)
+    # time.sleep(1)
 
 plt.waitforbuttonpress()
 

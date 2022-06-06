@@ -1,8 +1,9 @@
-pose = table2array(readtable("poselog.csv"));
+pose = table2array(readtable("poselog3t.csv"));
 xpos = pose(:,1);
 ypos = pose(:,2);
 
 close all;
+%% 
 scatter(xpos, ypos);
 axis equal;
 

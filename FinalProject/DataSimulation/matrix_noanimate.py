@@ -19,7 +19,7 @@ def plotPixel(a, x1, y1, x2, y2, dx, dy, decide):
     # it can handle both cases when m>1 & m<1
     pk = 2 * dy - dx
     for i in range(0,int(dx)):
-        print(x1, " ", y2)
+        # print(x1, " ", y2)
         # checking either to decrement or increment the value
         # if we have to plot from (0,100) to (100,0)
         if (x1 < x2): 
@@ -57,7 +57,7 @@ def plotPixel(a, x1, y1, x2, y2, dx, dy, decide):
 
 
 # create container for grid data, initialize to 0.5
-a = np.ones((600,600)) * 0.5
+a = np.ones((1000,1000)) * 0.5
 
 with open('log.csv', 'r') as csv_file:
     reader = csv.reader(csv_file)
@@ -66,8 +66,8 @@ with open('log.csv', 'r') as csv_file:
         row = row[0].split(" ")
         print(row)
 
-        x1 = float(row[0]) + 300
-        y1 = float(row[1]) + 300
+        x1 = float(row[0]) + 500
+        y1 = float(row[1]) + 500
         theta = float(row[2]) % (2 * np.pi)
         ping = float(row[3])
         

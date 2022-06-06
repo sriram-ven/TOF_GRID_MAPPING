@@ -13,7 +13,7 @@ dataPoints = [plt.plot([], [], 'ro')[0]]
 robot = [plt.plot([], [])[0]]
 patches = dataPoints + robot
 
-sweeper = Sweeper(0,0,0,400)
+sweeper = Sweeper(0,0,0,600)
 truePoints = sweeper.environment.extractPoints()
 plt.plot(truePoints[0], truePoints[1])
 
@@ -43,6 +43,5 @@ def update(frame):
 
     return patches
 
-ani = FuncAnimation(fig, update, frames=None,
-                    init_func=init, blit=True)
+ani = FuncAnimation(fig, update, frames=None, init_func=init, blit=True, interval = 10)
 plt.show()

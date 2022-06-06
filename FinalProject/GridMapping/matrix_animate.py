@@ -1,3 +1,5 @@
+# this script plots ping data on a matrix in real time used simulated data
+
 from re import X
 import matplotlib.pyplot as plt
 import numpy

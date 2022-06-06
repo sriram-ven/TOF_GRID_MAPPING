@@ -17,7 +17,7 @@
 #define BASE_WIDTH 200.0  // distance between two wheels in mm
 
 #define MAX_SPEED 13.0
-#define VALID_DISTANCE_RANGE 6.0
+#define VALID_DISTANCE_RANGE 20
 
 static Matrix pose; // [x; y; theta]
 static Matrix wheelSpeeds; // [right wheel; left wheel]
