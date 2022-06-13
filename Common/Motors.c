@@ -1,11 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <xc.h>
 #include <BOARD.h>
 #include <sys/attribs.h>
 #include "pwm.h"
 
 #include "Motors.h"
+
+#define TIMER_PERIOD 65535
+#define RISING_EDGES_PER_REV 540
+#define TIME_PER_TICK 0.00000005
+
+#define BUFFER_SIZE 15
 
 // left motor pins
 #define LEFT_MOTOR_PWM_PIN PWM_PORTY12 // pin 5
@@ -23,12 +30,23 @@
 
 /*
  * the encoder CN pins are as such:
- *      - leftA = CN15, RD6, pin 36
- *      - leftB = CN16, RD7, pin 37
+ *      - leftA = CN15, RD6, pin 37
+ *      - leftB = CN16, RD7, pin 36
  * 
  *      - rightA = CN17, RF4, pin 39
  *      - rightB = CN18, RF5, pin 40
  */
+
+/* This library supports two modes of operation with encoder, position tracking and speed tracking
+ * - position tracking uses change notify to increment encoder counts
+ * - speed tracking uses input capture to determine pulse period which is then converted to rad/sec
+ * 
+ * note that when using position tracking, this lib does not support function calls to speed.
+ * When speed tracking is used, the accumulated encoder ticks is not supported
+ */
+
+void CN_Init();
+void IC_Init();
 
 // current duty cycle of left and right motors
 int leftMotorDC = 0;
@@ -42,14 +60,25 @@ char rightMotorDirection;
 int leftMotorEncoderCount = 0;
 int rightMotorEncoderCount = 0;
 
+// motor speeds used in SPEED_TRACKING mode
+uint32_t LeftEncoderPeriod = 0;
+uint32_t RightEncoderPeriod = 0;
+
+// circular buffers to average past speed values
+uint32_t leftMotorPeriodBuffer[BUFFER_SIZE];
+uint8_t leftMotorBufferInd = 0;
+
+uint32_t rightMotorPeriodBuffer[BUFFER_SIZE];
+uint8_t rightMotorBufferInd = 0;
+
 // previous encoder states for left and right motor
 char LM_prevState;
 char RM_prevState;
 
-char MOTORS_Init(void){
+char MOTORS_Init(){
     // init pwm pins
     PWM_Init();
-    PWM_SetFrequency(PWM_2KHZ);
+    PWM_SetFrequency(MIN_PWM_FREQ);
     PWM_AddPins(LEFT_MOTOR_PWM_PIN);
     PWM_AddPins(RIGHT_MOTOR_PWM_PIN);
     
@@ -61,7 +90,19 @@ char MOTORS_Init(void){
     
     MOTORS_SetDirection(LEFT_MOTOR, FORWARD);
     MOTORS_SetDirection(RIGHT_MOTOR, FORWARD);
-    
+   
+    //initialize change notify interrupt
+//    if(mode == POSITION_TRACKING){
+//        CN_Init();
+//    }else{
+//        IC_Init();
+//    }
+    IC_Init();
+    CN_Init();
+    return SUCCESS;
+}
+
+void CN_Init(){
     // INIT Change notify
     CNCONbits.ON = 1; // Change Notify On
     CNENbits.CNEN15 = 1; //enable leftA phase
@@ -84,8 +125,36 @@ char MOTORS_Init(void){
     // initialize encoder states
     LM_prevState = (PORTDbits.RD7 << 1) | PORTDbits.RD6;
     RM_prevState = (PORTFbits.RF4 << 1) | PORTFbits.RF5;
+}
+
+void IC_Init(){
+    T3CON = 0x0;
+    T3CONbits.TCKPS = 0b001; // 1:2 pre-scaler
+    TMR3 = 0x0;
+    PR3 = TIMER_PERIOD;
+    //IC3 used for left motor-> pin 8
+    IC3CON = 0;
+    IC3CONbits.ICTMR = 0; // sets input capture to use timer2
+    IC3CONbits.ICI = 0b00; // interrupt on every capture event
+    IC3CONbits.ICM = 0b011; // captures every rising edge
+    IPC3bits.IC3IP = 4; // set interrupt priority
+    IPC3bits.IC3IS = 0b011;
+    IFS0bits.IC3IF = 0; // set flag low
+    IEC0bits.IC3IE = 1; // enable interrupt
     
-    return SUCCESS;
+    //IC4 used for right motor-> pin 35
+    IC4CON = 0;
+    IC4CONbits.ICTMR = 0; // sets input capture to use timer2
+    IC4CONbits.ICI = 0b00; // interrupt on every capture event
+    IC4CONbits.ICM = 0b011; // captures every rising edge
+    IPC4bits.IC4IP = 4; // set interrupt priority
+    IPC4bits.IC4IS = 0b011;
+    IFS0bits.IC4IF = 0; // set flag low
+    IEC0bits.IC4IE = 1; // enable interrupt
+
+    T3CONbits.ON = 1;
+    IC3CONbits.ON = 1;
+    IC4CONbits.ON = 1;
 }
 
 char MOTORS_SetDirection(char motor, char direction){
@@ -133,6 +202,13 @@ char MOTORS_SetDirection(char motor, char direction){
     return SUCCESS;
 }
 
+int MOTORS_GetDirection(char motor){
+    if(motor == LEFT_MOTOR){
+        return leftMotorDirection;
+    }
+    return rightMotorDirection;
+}
+
 char MOTORS_SetSpeed(char motor, int dc){
     if(dc > MAX_PWM){
         dc = MAX_PWM;
@@ -166,6 +242,33 @@ char MOTORS_SetSpeed(char motor, int dc){
             break;
     }
     return SUCCESS;
+}
+
+int MOTORS_GetDutyCycle(char motor){
+    if(motor == LEFT_MOTOR){
+        return leftMotorDC;
+    }
+    return rightMotorDC;
+}
+
+float MOTORS_GetMotorSpeed(char motor){
+    float period = 0;
+    if(motor == LEFT_MOTOR){
+        for(int i = 0; i < BUFFER_SIZE; i++){
+            period += leftMotorPeriodBuffer[leftMotorBufferInd];
+        }
+        period /= BUFFER_SIZE;
+    }else{
+        for(int i = 0; i < BUFFER_SIZE; i++){
+            period += rightMotorPeriodBuffer[rightMotorBufferInd];
+        }
+        period /= BUFFER_SIZE;
+    }
+    if(period == 0){
+        return 0;
+    }
+    float dist = 2 * M_PI / RISING_EDGES_PER_REV;
+    return dist / (period * TIME_PER_TICK);
 }
 
 char MOTORS_SetEncoderCount(char motor, int count){
@@ -326,13 +429,60 @@ void __ISR(_CHANGE_NOTICE_VECTOR) ChangeNotice_Handler(void) {
     if(LM_curState != LM_prevState){
         updateLeftMotorQE(LM_curState);
     }
-    if(RM_curState != LM_prevState){
+    if(RM_curState != RM_prevState){
         updateRightMotorQE(RM_curState);
     }
 }
 
+// left motor input capture interrupt
+void __ISR(_INPUT_CAPTURE_3_VECTOR) __IC3Interrupt(void) {
+    IFS0bits.IC3IF = 0;
+    static uint32_t prevTime = 0;
+    uint32_t curTime = (0xFFFF & IC3BUF);
+    if(curTime < prevTime){ // timer buffer overflow
+        LeftEncoderPeriod = (curTime + TIMER_PERIOD) - prevTime;
+    }else{
+        LeftEncoderPeriod = curTime - prevTime;
+    }
+    
+    // put new value into circular buffer
+    leftMotorPeriodBuffer[leftMotorBufferInd] = LeftEncoderPeriod;
+    leftMotorBufferInd = (leftMotorBufferInd + 1) % BUFFER_SIZE;
+    
+    // update previous time
+    prevTime = curTime;
+    
+    //make sure buffer is clear
+    for(int i = 0; i < 5; i++){
+      int tmp = IC3BUF; 
+    } 
+}
 
-#define MOTOR_TEST
+// right motor input capture interrupt
+void __ISR(_INPUT_CAPTURE_4_VECTOR) __IC4Interrupt(void) {
+    IFS0bits.IC4IF = 0;
+    static uint32_t prevTime = 0;
+    uint32_t curTime = (0xFFFF & IC4BUF);
+    if(curTime < prevTime){ // timer buffer overflow
+        RightEncoderPeriod = (curTime + TIMER_PERIOD) - prevTime;
+    }else{
+        RightEncoderPeriod = curTime - prevTime;
+    }
+    // put new value into circular buffer
+    rightMotorPeriodBuffer[rightMotorBufferInd] = RightEncoderPeriod;
+    rightMotorBufferInd = (rightMotorBufferInd + 1) % BUFFER_SIZE;
+    
+    // update previous time
+    prevTime = curTime;
+    
+    //make sure buffer is clear
+    for(int i = 0; i < 5; i++){
+      int tmp = IC4BUF; 
+    } 
+}
+
+
+//#define MOTOR_TEST
 #ifdef MOTOR_TEST
 #include "serial.h"
 #include "timers.h"
@@ -342,12 +492,13 @@ int main(void) {
     TIMERS_Init();
     MOTORS_Init();
     printf("\rMotors Test:\n");
-    MOTORS_SetSpeed(LEFT_MOTOR, 500);
+    MOTORS_SetSpeed(LEFT_MOTOR, 100);
+    MOTORS_SetSpeed(RIGHT_MOTOR, 0);
     int prevTime = 0;
     while(1){
         int curTime = TIMERS_GetMilliSeconds();
         if (abs(curTime - prevTime) > 20) {
-            printf("\r%d\n", MOTORS_GetEncoderCount(LEFT_MOTOR));
+            printf("\r%d\n", LeftEncoderPeriod);
             prevTime = curTime;
         }
         

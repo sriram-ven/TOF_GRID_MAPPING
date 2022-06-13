@@ -13,4 +13,3 @@ title("Pitch")
 
 subplot(3,1, 3)
 plot(data(:,3))
-title("Yaw")

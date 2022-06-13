@@ -47,16 +47,16 @@ unsigned int I2C_Init(unsigned int Rate) {
     unsigned int RealRate = 0;
     if (!I2C_Inited) {
 
-        I2C1CONbits.ON = 0;
+        I2C2CONbits.ON = 0;
 
-        I2C1BRG = (F_PB / (2 * Rate)) - 2;
+        I2C2BRG = (F_PB / (2 * Rate)) - 2;
 
 
-        I2C1CONbits.ON = 1;
+        I2C2CONbits.ON = 1;
         I2C_Inited = TRUE;
         RealRate = (F_PB) / ((I2C1BRG + 2)*2);
-        I2C1CONbits.PEN = 1;
-    while (I2C1CONbits.PEN == 1);
+        I2C2CONbits.PEN = 1;
+    while (I2C2CONbits.PEN == 1);
     }
     
     return RealRate;
@@ -77,44 +77,40 @@ unsigned char I2C_ReadRegister(unsigned char I2CAddress, unsigned char deviceReg
         return 0;
     }
 
-    I2C1CONbits.SEN = 1; // send a start condition
-    while (I2C1CONbits.SEN == 1); //wait for it to end, this is internal and can not stall
+    I2C2CONbits.SEN = 1; // send a start condition
+    while (I2C2CONbits.SEN == 1); //wait for it to end, this is internal and can not stall
 
-    I2C1TRN = I2CAddress << 1; // load transmission buffer with address and R/W and transmit
+    I2C2TRN = I2CAddress << 1; // load transmission buffer with address and R/W and transmit
 
-    while (I2C1STATbits.TRSTAT != 0); //wait for it, again no error possible
+    while (I2C2STATbits.TRSTAT != 0); //wait for it, again no error possible
 
-    if (I2C1STATbits.ACKSTAT == 1) {
+    if (I2C2STATbits.ACKSTAT == 1) {
         dbprintf("\r\nDevice failed to ACK\r\n");
         return 0;
     }
 
-    I2C1TRN = deviceRegisterAddress;
+    I2C2TRN = deviceRegisterAddress;
 
-    while (I2C1STATbits.TRSTAT != 0);
-    if (I2C1STATbits.ACKSTAT == 1) {
+    while (I2C2STATbits.TRSTAT != 0);
+    if (I2C2STATbits.ACKSTAT == 1) {
         dbprintf("\r\nDevice failed to ACK\r\n");
         return 0;
     }
-    I2C1CONbits.RSEN = 1;
+    I2C2CONbits.RSEN = 1;
 
-    while (I2C1CONbits.RSEN == 1);
-    I2C1TRN = (I2CAddress << 1) + 1;
+    while (I2C2CONbits.RSEN == 1);
+    I2C2TRN = (I2CAddress << 1) + 1;
 
-    while (I2C1STATbits.TRSTAT != 0);
-    if (I2C1STATbits.ACKSTAT == 1) {
+    while (I2C2STATbits.TRSTAT != 0);
+    if (I2C2STATbits.ACKSTAT == 1) {
         dbprintf("\r\nDevice failed to ACK\r\n");
         return 0;
     }
-    I2C1CONbits.RCEN = 1;
-    while (I2C1STATbits.RBF != 1);
-    regContents = I2C1RCV;
-    I2C1CONbits.PEN = 1;
-    while (I2C1CONbits.PEN == 1);
-    return regContents;
-
-
-
+    I2C2CONbits.RCEN = 1;
+    while (I2C2STATbits.RBF != 1);
+    regContents = I2C2RCV;
+    I2C2CONbits.PEN = 1;
+    while (I2C2CONbits.PEN == 1);
     return regContents;
 }
 
@@ -129,28 +125,28 @@ unsigned char I2C_ReadRegister(unsigned char I2CAddress, unsigned char deviceReg
  * @author Max Dunne*/
 unsigned char I2C_WriteReg(unsigned char I2CAddress,unsigned char deviceRegisterAddress, char data) {
 
-    I2C1CONbits.SEN = 1;
-    while (I2C1CONbits.SEN == 1);
+    I2C2CONbits.SEN = 1;
+    while (I2C2CONbits.SEN == 1);
     I2C1TRN = (I2CAddress << 1);
-    while (I2C1STATbits.TRSTAT != 0);
-    if (I2C1STATbits.ACKSTAT == 1) {
+    while (I2C2STATbits.TRSTAT != 0);
+    if (I2C2STATbits.ACKSTAT == 1) {
         //printf("Device Responded with NACK upon addressing");
         return 0;
     }
 
-    I2C1TRN = deviceRegisterAddress;
-    while (I2C1STATbits.TRSTAT != 0);
-    if (I2C1STATbits.ACKSTAT == 1) {
+    I2C2TRN = deviceRegisterAddress;
+    while (I2C2STATbits.TRSTAT != 0);
+    if (I2C2STATbits.ACKSTAT == 1) {
 
         return 0;
     }
-    I2C1TRN = data;
-    while (I2C1STATbits.TRSTAT != 0);
-    if (I2C1STATbits.ACKSTAT == 1) {
+    I2C2TRN = data;
+    while (I2C2STATbits.TRSTAT != 0);
+    if (I2C2STATbits.ACKSTAT == 1) {
         return 0;
     }
-    I2C1CONbits.PEN = 1;
-    while (I2C1CONbits.PEN == 1);
+    I2C2CONbits.PEN = 1;
+    while (I2C2CONbits.PEN == 1);
 
     return 1;
 }

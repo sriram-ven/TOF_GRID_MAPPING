@@ -1,1 +1,0 @@
-gcc Matrix.c main.c -lm

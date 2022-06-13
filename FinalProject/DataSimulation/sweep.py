@@ -51,22 +51,19 @@ class Sweeper:
             moveStep = 5
             self.moveForward(moveStep)
             self.accumulatedDistance += moveStep
-            if(abs(self.accumulatedDistance - self.targetDistance) < 2 * moveStep):
-                print("starting sweep")
+            if((abs(self.accumulatedDistance - self.targetDistance) < 2 * moveStep) or (pow(pow(self.pos.x,2) + pow(self.pos.y,2), 0.5) > (0.75 * self.environment.radius))):
                 self.moveState = 1
                 self.accumulatedSweep = 0
         elif(self.moveState == 1):  # 360 sweep
-            turnStep = 0.1
+            turnStep = 0.01
             self.turnAmount(turnStep)
             self.accumulatedSweep += turnStep
             if(self.accumulatedSweep  > 2 * math.pi):
-                print("starting turn")
                 self.moveState = 2
                 self.targetDirection = self.dir + random.random() * math.pi * 2
         else:  # turn towards new spot
             angleDiff = self.dir - self.targetDirection
-            print(self.dir, self.targetDirection, angleDiff)
-            turnStep = 0.1
+            turnStep = 0.01
             if(angleDiff > 0):
                 self.turnAmount(-1 * turnStep)
             else:
